@@ -1,0 +1,2 @@
+# Certificate Bundle
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=n
