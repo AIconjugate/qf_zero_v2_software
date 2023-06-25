@@ -19,7 +19,7 @@ extern "C"
 #include <stdlib.h>
 
 #ifndef MY_PRINTF_EN
-#define MY_PRINTF_EN 1 // 如果配置文件未定义，则用户自定义，0禁用模块不不编译，1启用模块
+#define MY_PRINTF_EN 0 // 如果配置文件未定义，则用户自定义，0禁用模块不不编译，1启用模块
 #endif
 
 #if MY_PRINTF_EN

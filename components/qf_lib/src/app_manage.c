@@ -5,6 +5,7 @@ typedef struct
     void (*app_kill)();
     void (*app_load)();
     void (*app_close)();
+    void (*app_power_off)();
 } app_func_t;
 
 typedef struct _app_list_t
@@ -138,6 +139,17 @@ void app_kill_all()
     {
         if (tmp->func.app_kill != NULL)
             tmp->func.app_kill();
+        tmp = tmp->next;
+    }
+}
+
+void app_power_off_all()
+{
+    app_list_t *tmp = list_head;
+    for (size_t i = 0; i < app_num; i++)
+    {
+        if (tmp->func.app_power_off != NULL)
+            tmp->func.app_power_off();
         tmp = tmp->next;
     }
 }

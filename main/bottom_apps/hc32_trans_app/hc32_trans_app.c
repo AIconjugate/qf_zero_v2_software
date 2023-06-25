@@ -74,6 +74,7 @@ void hc32_trans_app_install()
         .app_init = hc32_trans_app_init,
         .app_kill = NULL,
         .app_load = NULL,
+        .app_power_off = NULL,
         .has_gui = 0,
         .icon = NULL,
         .name = "hc32_trans"};

@@ -1,22 +1,32 @@
+#include "lv_input_interface.h"
 #include "lcd_driver_interface.h"
-#include "device_interfaces.h"
-#include "system_app.h"
 
 static lv_indev_t *indev_tp_handle = NULL;
 
 static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
 {
     static cst816_info_t info;
+    static uint8_t clr_flg = 0;
     cst816_read_info(&info);
     if (info.state == tp_touching)
     {
-        system_screen_rest_clr();
+        if (clr_flg == 0) // 触摸时背光常亮
+        {
+            clr_flg = 1;
+            key_value_msg("sys_always_on", &clr_flg, sizeof(clr_flg));
+        }
+
         data->point.x = info.now_x;
         data->point.y = info.now_y;
         data->state = LV_INDEV_STATE_PRESSED;
     }
     else
     {
+        if (clr_flg == 1) // 释放背光常亮恢复
+        {
+            clr_flg = 0;
+            key_value_msg("sys_always_on", &clr_flg, sizeof(clr_flg));
+        }
         data->state = LV_INDEV_STATE_RELEASED;
     }
     if (info.gesture != tp_gesture_none)

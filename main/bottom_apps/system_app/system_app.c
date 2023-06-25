@@ -1,4 +1,7 @@
 #include "system_app.h"
+#include "peripheral_interface.h"
+#include "hc32_trans_interface.h"
+#include "lcd_driver_interface.h"
 #include "device_interfaces.h"
 
 /**
@@ -31,6 +34,15 @@ typedef struct
 
 static system_paras_t sys_paras;
 static RTC_FAST_ATTR uint8_t last_blk = 50;
+static RTC_FAST_ATTR uint8_t wake_mode = power_on;
+
+extern void app_startup_list();
+
+void system_init()
+{
+    device_interface_init(); // 初始化接口程序
+    app_startup_list();      // 初始化应用程序
+}
 
 static void system_data_init()
 {
@@ -253,16 +265,81 @@ static void system_get_bat_cb(void *value, size_t lenth)
     *(cw2015_bat_info_t *)value = sys_paras.data.bat_info;
 }
 
+void system_set_motor(uint8_t var)
+{
+    per_motor_set(var);
+}
+
+static void system_set_motor_cb(void *value, size_t lenth)
+{
+    per_motor_set(*(uint8_t *)value);
+}
+
+uint8_t system_get_usb_sta()
+{
+    return per_get_usb_online_sta();
+}
+
+static void system_get_usb_sta_cb(void *value, size_t lenth)
+{
+    *(uint8_t *)value = system_get_usb_sta();
+}
+
 void system_deep_sleep_start()
 {
+    wake_mode = wake_up;
     app_kill_all();
     esp_deep_sleep_start();
+}
+
+void system_power_off()
+{
+    wake_mode = power_on;
+    app_kill_all();
+    app_power_off_all();
+    esp_deep_sleep_start();
+}
+
+static void system_power_off_cb(void *value, size_t lenth)
+{
+    system_power_off();
+}
+
+void system_restart()
+{
+    app_kill_all();
+    app_power_off_all();
+    esp_restart();
+}
+
+static void system_restart_cb(void *value, size_t lenth)
+{
+    system_restart();
+}
+
+system_wake_t system_get_power_on_mode()
+{
+    return wake_mode;
+}
+
+static void system_get_power_on_mode_cb(void *value, size_t lenth)
+{
+    *(system_wake_t *)value = wake_mode;
+}
+
+static void system_take_gui_key_cb(void *value, size_t lenth)
+{
+    system_take_gui_key();
+}
+
+static void system_give_gui_key_cb(void *value, size_t lenth)
+{
+    system_give_gui_key();
 }
 
 static void sys_app_init()
 {
     system_data_init();
-   // xTaskCreatePinnedToCore(clock_run_tsak, "clock_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL, 0); // 时间运行任务
 
     const esp_timer_create_args_t ms_tick_timer_args = {// 心跳定时器
                                                         .callback = &clock_run_tsak,
@@ -272,20 +349,32 @@ static void sys_app_init()
     esp_timer_start_periodic(ms_tick_timer, 1000 * 1000);
 
     btask_creat_ms(10, lcd_blk_task, btask_infinite, "lcd_blk_task", NULL); // 背光管理任务
-    // /btask_creat_ms(1000, per_info_updata_task, btask_infinite, "lcd_blk_task", NULL);
 
-    key_value_register(NULL, "sys_set_blk", system_set_blk_cb);          // 订阅设置背光事件
-    key_value_register(NULL, "sys_get_blk", system_get_blk_cb);          // 订阅获取背光事件
+    key_value_register(NULL, "sys_set_blk", system_set_blk_cb); // 订阅设置背光事件
+    key_value_register(NULL, "sys_get_blk", system_get_blk_cb); // 订阅获取背光事件
+
     key_value_register(NULL, "sys_set_rest", system_set_screen_rest_cb); // 订阅设置息屏时间事件
     key_value_register(NULL, "sys_get_rest", system_get_screen_rest_cb); // 订阅设置息屏时间事件
     key_value_register(NULL, "sys_clr_rest", system_screen_rest_clr_cb); // 订阅重置息屏时间事件
     key_value_register(NULL, "sys_always_on", system_screen_keep_on_cb); // 订阅背光常亮事件
-    key_value_register(NULL, "sys_up_time", system_upload_time_cb);      // 订阅更新时间事件
-    key_value_register(NULL, "sys_set_time", system_set_time_cb);        // 订阅设置时间事件
-    key_value_register(NULL, "sys_get_time", system_get_time_cb);        // 订阅获取时间事件
-    key_value_register(NULL, "sys_upload_bat", system_upload_bat_cb);    // 订阅更新电池信息事件
-    key_value_register(NULL, "sys_set_bat", system_set_bat_cb);          // 订阅设置电池报警值事件
-    key_value_register(NULL, "sys_get_bat", system_get_bat_cb);          // 订阅获取电池信息事件
+
+    key_value_register(NULL, "sys_up_time", system_upload_time_cb); // 订阅更新时间事件
+    key_value_register(NULL, "sys_set_time", system_set_time_cb);   // 订阅设置时间事件
+    key_value_register(NULL, "sys_get_time", system_get_time_cb);   // 订阅获取时间事件
+
+    key_value_register(NULL, "sys_up_bat", system_upload_bat_cb); // 订阅更新电池信息事件
+    key_value_register(NULL, "sys_set_bat", system_set_bat_cb);   // 订阅设置电池报警值事件
+    key_value_register(NULL, "sys_get_bat", system_get_bat_cb);   // 订阅获取电池信息事件
+
+    key_value_register(NULL, "sys_set_motor", system_set_motor_cb);         // 订阅设置振动器强度事件
+    key_value_register(NULL, "sys_usb_sta", system_get_usb_sta_cb);         // 订阅获取USB连接状态事件
+    key_value_register(NULL, "sys_wake_mode", system_get_power_on_mode_cb); // 订阅获取唤醒模式事件
+
+    key_value_register(NULL, "sys_power_off", system_power_off_cb); // 订阅关机事件
+    key_value_register(NULL, "sys_restart", system_restart_cb);     // 订阅重启事件
+
+    key_value_register(NULL, "take_gui_key", system_take_gui_key_cb); // 订阅获取GUI增删权限事件
+    key_value_register(NULL, "give_gui_key", system_give_gui_key_cb); // 订阅归还GUI增删权限事件
 }
 
 static void system_app_kill()
@@ -300,6 +389,7 @@ void system_app_install()
         .app_init = sys_app_init,
         .app_kill = system_app_kill,
         .app_load = NULL,
+        .app_power_off = system_power_off,
         .has_gui = 0,
         .icon = NULL,
         .name = "system"};

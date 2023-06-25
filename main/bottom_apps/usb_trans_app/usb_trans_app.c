@@ -1,7 +1,5 @@
 #include "usb_trans_app.h"
-#include "device_interfaces.h"
 #include "system_app.h"
-#include "hc32_trans_app.h"
 
 static void usb_chek_app_task(void *arg)
 {

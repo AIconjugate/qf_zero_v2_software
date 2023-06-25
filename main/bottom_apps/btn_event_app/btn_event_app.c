@@ -37,6 +37,7 @@ void btn_event_app_install()
         .app_init = btn_event_app_init,
         .app_kill = NULL,
         .app_load = NULL,
+        .app_power_off = NULL,
         .has_gui = 0,
         .icon = NULL,
         .name = "btn_event"};

@@ -42,10 +42,10 @@ void lv_interface_init()
 
     lv_init(); // 初始化LVGL
 
-    lv_color_t *buf1 = heap_caps_malloc(I8080_TRANS_BYTES, LCD_BUFFER_USE); // 申请全屏buffer
-    lv_color_t *buf2 = heap_caps_malloc(I8080_TRANS_BYTES, LCD_BUFFER_USE);
+    lv_color_t *buf1 = heap_caps_malloc(LVGL_BUFFER_SIZE * 2, LCD_BUFFER_USE); // 申请全屏buffer
+    lv_color_t *buf2 = heap_caps_malloc(LVGL_BUFFER_SIZE * 2, LCD_BUFFER_USE);
 
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LCD_H_RES * LCD_V_RES);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LVGL_BUFFER_SIZE);
 
     lv_disp_drv_t *disp_drv = lcd_get_disp_drv(); // 获取LCD对象
     lv_disp_drv_init(disp_drv);                   // 初始化

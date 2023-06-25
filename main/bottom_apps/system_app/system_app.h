@@ -2,6 +2,8 @@
 #define system_app_H
 
 #include "static_include.h"
+#include "senser_iic_interface.h"
+
 /**
     系统APP托管功能：
         1.屏幕背光
@@ -25,6 +27,17 @@ enum
     screen_always_on = 0xffffffff,
 };
 
+typedef enum
+{
+    power_on = 0,
+    wake_up = 1
+}system_wake_t;
+
+/**
+ * @brief 系统初始化，初始化底层接口，初始化APP
+ */
+void system_init();
+
 /**
  * @brief 安装系统app
  *
@@ -35,6 +48,23 @@ void system_app_install();
  * @brief 系统进入休眠
  */
 void system_deep_sleep_start();
+
+/**
+ * @brief 关机
+ */
+void system_power_off();
+
+/**
+ * @brief 重启
+ */
+void system_restart();
+
+/**
+ * @brief 获取唤醒模式
+ * 
+ * @return system_wake_t power_on（开机或重启） wake_up（休眠唤醒）
+ */
+system_wake_t system_get_power_on_mode();
 
 /**
  * @brief 获取GUI增删权限,在要创建和删除控件时，这是必要的，否则将造成宕机
@@ -125,5 +155,28 @@ void system_set_bat(uint8_t low_soc);
  * @brief 获取电池信息
  */
 void system_get_bat(cw2015_bat_info_t *info);
+
+/**
+ * @brief 设置振动器震动强度
+ *
+ * @param var 0-100，0关闭
+ */
+void system_set_motor(uint8_t var);
+
+/**
+ * @brief 获取USB连接状态
+ *
+ * @return uint8_t 0:未连接，1：已连接
+ */
+uint8_t system_get_usb_sta();
+
+/**
+ * @brief 副处理器指令接口
+ *
+ * @param cmd 指令名
+ * @param dat 数据
+ * @param lenth 数据长度，字节
+ */
+void hc32_trans_send_pack(const char *cmd, uint8_t *dat, size_t lenth);
 
 #endif

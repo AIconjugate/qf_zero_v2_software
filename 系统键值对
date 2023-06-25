@@ -1,0 +1,65 @@
+键值对通信:
+包含键名(字符串)和值(此项目采用指针传递参数),通过一个键值中间层,解决应用层和底层之间的耦合问题,使APP和底层相互独立。
+使用方法简述:如使用key_value_register(NULL,"sys_btn",your_function)；订阅了按键事件后,当有按键按下时,系统app将发送一条名为"sys_btn"的键事件,查找到有订阅"sys_btn"事件后,将会调用函数your_function,函数接收到的用户数据即为按键的键值btn_event_t
+除了系统已经定义好的键值对,用户可以任意发布(key_value_msg)键值对信息和订阅key_value_register,删除key_value_del
+
+系统参数键值通信格式:
+
+/**
+     * @brief 注册(订阅)有指定键时的回调函数
+     *
+     * @param handle 用于接收返回句柄
+     * @param key 键名
+     * @param cb 回调函数
+     * @return int 0:成功,1:键值对内存申请失败,2:键名内存申请失败
+     */
+    int key_value_register(key_value_handle_t *handle, const char *key, key_value_cb_t cb);
+
+/**
+     * @brief 创建(发布)一条键值对通知
+     *
+     * @param key 键名,可以是动态的
+     * @param value 指向数据,可以是动态的
+     * @param lenth 数据长度,字节
+     * @return int 0:成功,1:无注册键,2:无指定键
+     */
+    int key_value_msg(const char *key, void *value, size_t lenth);
+
+/**
+     * @brief 删除已注册的键
+     *
+     * @param handle 注册的句柄
+     * @return int 0:成功,1:不存在句柄
+     */
+    int key_value_del(key_value_handle_t handle);
+
+
+功能					键名			值			类型宽度
+
+设置背光亮度:				"sys_set_blk"		1-100			        uint8_t
+查询背光亮度:				"sys_get_blk"		1-100			        uint8_t
+
+设置息屏时间(秒S):			"sys_set_rest"		3-2^32			        uint32_t
+查询息屏时间(秒S):			"sys_get_rest"		3-2^32			        uint32_t
+息屏时间计时清零:			"sys_clr_rest"		NULL			        0
+设置屏幕背光常亮:			"sys_always_on"		0(off)或1(on)		    uint8_t
+
+设置系统时间:				"sys_set_time"		时间信息结构体		    clock_time_t
+查询系统时间:				"sys_get_time"		时间信息结构体		    clock_time_t
+
+设置电池低电量报警阈值:	    "sys_set_bat"		1-30			        uint8_t
+获取电池信息:				"sys_get_bat"		电池信息结构体		    bat_info_t	
+
+订阅按键事件:				"sys_btn"		    按键事件枚举		    btn_event_t
+
+设置振动器强度				"sys_set_motor"		0-100			        uint8_t
+获取USB连接状态				"sys_usb_sta"		0(无连接)或1(接入USB)	uint8_t
+获取唤醒模式				"sys_wake_mode"		power_on或wake_up	    system_wake_t
+
+关机                        "sys_power_off"     NULL                    0
+重启                        "sys_restart"       NULL                    0
+
+获取GUI增删权限             "take_gui_key"      NULL                    0
+归还GUI增删权限             "give_gui_key"      NULL                    0
+
+

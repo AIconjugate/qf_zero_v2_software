@@ -23,13 +23,14 @@ extern "C"
 
     typedef struct _app_config_t
     {
-        const char *name;    // app名称，静态字符串
-        const void *icon;    // app图标，静态图标
-        void (*app_init)();  // 初始化APP入口，在安装app时运行一次
-        void (*app_kill)();  // 彻底关闭APP入口
-        void (*app_load)();  // 加载APP到前台入口
-        void (*app_close)(); // APP切到后台入口
-        uint8_t has_gui;     // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
+        const char *name;     // app名称，静态字符串
+        const void *icon;     // app图标，静态图标
+        void (*app_init)();   // 初始化APP入口，在安装app时运行一次
+        void (*app_kill)();   // 彻底关闭APP入口
+        void (*app_load)();   // 加载APP到前台入口
+        void (*app_close)();  // APP切到后台入口
+        void(*app_power_off)(); // 彻底关机处理函数，在此保存数据到EEPROM
+        uint8_t has_gui;      // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
     } app_config_t;
 
     typedef struct _app_obj_t
@@ -103,6 +104,11 @@ extern "C"
      * @brief 关闭所有app进程，在息屏前会调用此函数，需要掉电保存的数据可以在kill函数里进行相关处理
      */
     void app_kill_all();
+
+    /**
+     * @brief 彻底关机时调用，以通知APP把数据转存到EEPROM内
+     */
+    void app_power_off_all();
 
     /**
      * @brief 获取app对象，参数二选一，名称不为NULL使用名称查找APP，名称为NULL则使用句柄查找APP(高效率)

@@ -68,7 +68,8 @@
         "cstring": "c",
         "typeinfo": "c",
         "system_app.h": "c",
-        "cw2015.h": "c"
+        "cw2015.h": "c",
+        "lv_input_interface.h": "c"
     },
     "cmake.configureOnOpen": false
 }

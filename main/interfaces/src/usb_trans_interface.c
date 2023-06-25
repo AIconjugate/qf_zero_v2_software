@@ -1,5 +1,4 @@
 #include "usb_trans_interface.h"
-#include "lcd_driver_interface.h"
 
 static trans_packer_handle_t *usb_trans_handle = NULL;
 
