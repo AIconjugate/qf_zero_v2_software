@@ -1,0 +1,4 @@
+[submodule "HC32_SOFTWARE"]
+	url  = https://gitee.com/deng-hongxiang/qf_-zero_-v2_-hc32_-sofoware
+	path = HC32_SOFTWARE
+
