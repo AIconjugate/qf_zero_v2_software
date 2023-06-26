@@ -5,9 +5,8 @@
 #include "lcd_driver_interface.h"
 
 #define LVGL_TASK_ON_CORE 1
-#define LVGL_REFRESH_TIME_MS 10
-#define LVGL_BUFFER_SIZE (LCD_H_RES * (LCD_V_RES / 2))
-
+#define LVGL_REFRESH_TIME_MS 1
+#define LVGL_BUFFER_SIZE (LCD_H_RES * (LCD_V_RES / 3))
 /**
  * @brief 初始化LVGL,注册LCD显示器
  */

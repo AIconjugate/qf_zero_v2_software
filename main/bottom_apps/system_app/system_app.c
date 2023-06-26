@@ -42,13 +42,14 @@ void system_init()
 {
     device_interface_init(); // 初始化接口程序
     app_startup_list();      // 初始化应用程序
+    app_load("desktop", 0);  // 加载桌面
 }
 
 static void system_data_init()
 {
     memset(&sys_paras, 0, sizeof(system_paras_t));
     sys_paras.data.lcd_blk = last_blk;
-    sys_paras.eeprom.screen_rest_sec = 5;
+    sys_paras.eeprom.screen_rest_sec = system_rest_sec_default;
 }
 
 static void system_data_save()

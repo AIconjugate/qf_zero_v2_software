@@ -18,7 +18,7 @@ typedef struct _app_list_t
 
 static app_list_t *list_head = NULL;
 static app_list_t *list_tail = NULL;
-static int32_t app_num = 0;
+static int32_t app_cnt = 0;
 
 static int _strcmp(const char *str1, const char *str2)
 {
@@ -58,7 +58,7 @@ static app_list_t *app_list_find(const char *name)
 
 static app_list_t *app_list_find_id(app_handle_t handle)
 {
-    if (handle >= app_num)
+    if (handle >= app_cnt)
         return NULL;
     app_list_t *move = list_head;
     for (size_t i = 0; i < handle; i++)
@@ -78,16 +78,16 @@ app_handle_t app_install(app_config_t *cfg)
 
     app->obj.name = cfg->name;
     app->obj.icon = cfg->icon;
-    *(uint8_t *)&app->obj.icon = cfg->has_gui;
+    *(uint8_t *)&app->obj.has_gui = cfg->has_gui;
 
-    app->handle = app_num;
-    app_num++;
+    app->handle = app_cnt;
+    app_cnt++;
     app_list_add(app);
 
     if (cfg->app_init != NULL)
         cfg->app_init();
 
-    return (app_num - 1);
+    return (app_cnt - 1);
 }
 
 uint8_t app_load(const char *name, app_handle_t handle)
@@ -135,7 +135,7 @@ uint8_t app_kill(const char *name, app_handle_t handle)
 void app_kill_all()
 {
     app_list_t *tmp = list_head;
-    for (size_t i = 0; i < app_num; i++)
+    for (size_t i = 0; i < app_cnt; i++)
     {
         if (tmp->func.app_kill != NULL)
             tmp->func.app_kill();
@@ -146,7 +146,7 @@ void app_kill_all()
 void app_power_off_all()
 {
     app_list_t *tmp = list_head;
-    for (size_t i = 0; i < app_num; i++)
+    for (size_t i = 0; i < app_cnt; i++)
     {
         if (tmp->func.app_power_off != NULL)
             tmp->func.app_power_off();
@@ -172,9 +172,9 @@ const char *app_get_name(app_handle_t handle)
         return (tmp->obj.name);
 }
 
-int32_t app_get_num()
+int32_t app_get_cnt()
 {
-    return app_num;
+    return app_cnt;
 }
 
 app_obj_t *app_get(const char *name, app_handle_t handle)

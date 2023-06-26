@@ -71,7 +71,7 @@ extern "C"
      *
      * @return int32_t
      */
-    int32_t app_get_num();
+    int32_t app_get_cnt();
 
     /**
      * @brief 打开APP（前台），参数二选一，名称不为NULL使用名称查找APP，名称为NULL则使用句柄查找APP(高效率)

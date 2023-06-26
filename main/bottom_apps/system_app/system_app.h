@@ -11,6 +11,8 @@
         3.时间
 */
 
+#define system_rest_sec_default 20
+
 typedef struct
 {
     uint8_t year;
