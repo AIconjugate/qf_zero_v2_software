@@ -9,11 +9,11 @@ idf_component_register(
     #APP路径添加
     SRC_DIRS        "bottom_apps/btn_event_app" "bottom_apps/hc32_trans_app" 
                     "bottom_apps/usb_trans_app" "bottom_apps/system_app" 
-                    "ui_apps/test_app"
+                    "ui_apps/test_app" "ui_apps/desktop"
 
     INCLUDE_DIRS    "bottom_apps/btn_event_app"  "bottom_apps/hc32_trans_app"  
                     "bottom_apps/usb_trans_app"  "bottom_apps/system_app" 
-                    "ui_apps/test_app"
+                    "ui_apps/test_app" "ui_apps/desktop"
 )
 
 

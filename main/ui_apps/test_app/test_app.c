@@ -20,7 +20,7 @@ void test_cb(lv_timer_t *e)
     clock_time_t time;
     system_get_time(&time);
 
-    lv_label_set_text_fmt(tmp->label_time, "%d-%d-%d", time.hour, time.min, time.sec);
+    lv_label_set_text_fmt(tmp->label_time, "%d-%d  %d  %d-%d-%d", time.month, time.day, time.week, time.hour, time.min, time.sec);
 
     static uint8_t usb_sta = 0;
     if (system_get_usb_sta() != usb_sta)
@@ -68,7 +68,7 @@ static void test_app_load()
     labels.label_bat = label_bat;
 
     lv_obj_t *label_time = lv_label_create(lv_scr_act());
-    lv_obj_align_to(label_time, slider, LV_ALIGN_OUT_TOP_MID, -20, -10);
+    lv_obj_align_to(label_time, slider, LV_ALIGN_OUT_TOP_MID, -40, -10);
     labels.label_time = label_time;
 
     system_give_gui_key(); // 归还GUI增删权限
@@ -82,8 +82,6 @@ static void test_app_load()
 
     lv_timer_create(test_cb, 10, &labels);
 }
-
-////////////////////以上为测试程序//////////////////////////
 
 void test_app_install()
 {
