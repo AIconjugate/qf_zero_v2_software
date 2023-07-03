@@ -63,5 +63,5 @@ void device_interface_init()
     esp_timer_create(&ms_tick_timer_args, &ms_tick_timer);
     esp_timer_start_periodic(ms_tick_timer, 1 * 1000);
 
-    xTaskCreatePinnedToCore(btask_task, "btask", 1024 * 10, NULL, configMAX_PRIORITIES - 1, &btask_handle, 0);
+    xTaskCreate(btask_task, "btask", 1024 * 10, NULL, configMAX_PRIORITIES - 2, &btask_handle);
 }

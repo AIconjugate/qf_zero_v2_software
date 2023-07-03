@@ -2,9 +2,22 @@
 
 #if key_value_transation_compile_en
 
+typedef struct _del_list
+{
+    key_value_handle_t del_handle;
+    struct _del_list *next;
+} del_list_t;
+
 static key_value_register_t *register_head = NULL;
 static key_value_register_t *register_tail = NULL;
 static uint8_t _busy = 0;
+
+static del_list_t *del_head = NULL;
+static del_list_t *del_tail = NULL;
+static size_t del_cnt = 0;
+static uint8_t _busy_del = 0;
+
+static key_value_register_t *chek_has_register(key_value_handle_t handle);
 
 static int key_cmp(const char *key1, const char *key2)
 {
@@ -24,6 +37,55 @@ static int get_key_sum(const char *key)
         sum += key[i];
     }
     return sum;
+}
+
+static void deL_handle(key_value_handle_t handle)
+{
+    key_value_register_t *tmp = chek_has_register(handle);
+    if (tmp == NULL)
+        return;
+
+    if (tmp == register_head)
+    {
+        if (register_head == register_tail)
+        {
+            register_head = NULL;
+            register_tail = NULL;
+        }
+        else
+            register_head = register_head->next;
+    }
+    else if (tmp == register_tail)
+    {
+        register_tail = tmp->last;
+        register_tail->next = NULL;
+    }
+    else
+    {
+        key_value_register_t *last = tmp->last;
+        last->next = tmp->next;
+    }
+
+    key_value_free_func((void *)tmp->key);
+    key_value_free_func(tmp);
+}
+
+static void del_handle_chek()
+{
+    if (del_cnt == 0)
+        return;
+    del_list_t *tmp = del_head;
+    del_list_t *move = tmp->next;
+    while (del_cnt--)
+    {
+        deL_handle(tmp->del_handle);
+        key_value_free_func(tmp);
+        tmp = move;
+        move = move->next;
+    }
+
+    del_head = NULL;
+    del_tail = NULL;
 }
 
 static key_value_register_t *chek_has_register(key_value_handle_t handle)
@@ -51,10 +113,20 @@ int key_value_msg(const char *key, void *value, size_t lenth)
 {
     int ret = 2;
     int sum = 0;
+
+    while (_busy)
+        ;
+    _busy = 1;
+
+    del_handle_chek();
+
     key_value_register_t *move = register_head;
 
     if (move == NULL)
+    {
+        _busy = 0;
         return 1;
+    }
 
     sum = get_key_sum(key);
 
@@ -74,10 +146,16 @@ int key_value_msg(const char *key, void *value, size_t lenth)
 
     chek_null:
         if (move->next == NULL)
+        {
+            _busy = 0;
             return ret;
+        }
+
         move = move->next;
     }
 
+    del_handle_chek();
+    _busy = 0;
     return ret;
 }
 
@@ -128,39 +206,24 @@ int key_value_register(key_value_handle_t *handle, const char *key, key_value_cb
 
 int key_value_del(key_value_handle_t handle)
 {
-    key_value_register_t *tmp = chek_has_register(handle);
+    while (_busy_del)
+        ;
+    _busy_del = 1;
+    del_list_t *tmp = key_value_malloc_func(sizeof(del_list_t));
     if (tmp == NULL)
         return 1;
+    tmp->del_handle = handle;
+    tmp->next = NULL;
 
-    while (_busy)
-        ;
-    _busy = 1;
+    if (del_tail != NULL)
+        del_tail->next = tmp;
+    if (del_head == NULL)
+        del_head = tmp;
+    del_tail = tmp;
+    del_cnt++;
 
-    if (tmp == register_head)
-    {
-        if (register_head == register_tail)
-        {
-            register_head = NULL;
-            register_tail = NULL;
-        }
-        else
-            register_head = register_head->next;
-    }
-    else if (tmp == register_tail)
-    {
-        register_tail = tmp->last;
-        register_tail->next = NULL;
-    }
-    else
-    {
-        key_value_register_t *last = tmp->last;
-        last->next = tmp->next;
-    }
+    _busy_del = 0;
 
-    key_value_free_func((void *)tmp->key);
-    key_value_free_func(tmp);
-
-    _busy = 0;
     return 0;
 }
 

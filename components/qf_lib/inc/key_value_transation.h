@@ -33,6 +33,7 @@ extern "C"
         struct _key_value_register_t *next;
         struct _key_value_register_t *last;
         int key_sum;
+        uint8_t del_flg;
     } key_value_register_t;
 
     typedef key_value_register_t *key_value_handle_t;

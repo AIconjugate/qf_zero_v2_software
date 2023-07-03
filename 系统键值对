@@ -47,19 +47,24 @@
 设置系统时间:				"sys_set_time"		时间信息结构体		    clock_time_t
 查询系统时间:				"sys_get_time"		时间信息结构体		    clock_time_t
 
-设置电池低电量报警阈值:	    "sys_set_bat"		1-30			        uint8_t
-获取电池信息:				"sys_get_bat"		电池信息结构体		    bat_info_t	
+设置电池低电量报警阈值:	    "sys_set_bat"		 1-30			        uint8_t
+获取电池信息:				"sys_get_bat"		电池信息结构体		     bat_info_t	
 
-订阅按键事件:				"sys_btn"		    按键事件枚举		    btn_event_t
+订阅按键事件:				"sys_btn"		    按键事件枚举		     btn_event_t
 
 设置振动器强度				"sys_set_motor"		0-100			        uint8_t
-获取USB连接状态				"sys_usb_sta"		0(无连接)或1(接入USB)	uint8_t
+获取USB连接状态				"sys_usb_sta"		0(无连接)或1(接入USB)	 uint8_t
 获取唤醒模式				"sys_wake_mode"		power_on或wake_up	    system_wake_t
 
-关机                        "sys_power_off"     NULL                    0
-重启                        "sys_restart"       NULL                    0
+关机                        "sys_power_off"     NULL                   0
+重启                        "sys_restart"       NULL                   0
 
 获取GUI增删权限             "take_gui_key"      NULL                    0
 归还GUI增删权限             "give_gui_key"      NULL                    0
 
+系统返回HOME手势            "sys_home"          NULL                    0
+系统返回手势                "sys_back"          NULL                    0
+系统下拉状态栏手势           "sys_status_bar"   NULL                     0
+
+获取屏幕操作类型            "tp_type"           0(点击)1(滑动)           uint8_t            
 

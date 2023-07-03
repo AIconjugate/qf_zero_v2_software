@@ -19,6 +19,7 @@ typedef struct _app_list_t
 static app_list_t *list_head = NULL;
 static app_list_t *list_tail = NULL;
 static int32_t app_cnt = 0;
+static app_obj_t *app_loaded = NULL;
 
 static int _strcmp(const char *str1, const char *str2)
 {
@@ -92,13 +93,21 @@ app_handle_t app_install(app_config_t *cfg)
 
 uint8_t app_load(const char *name, app_handle_t handle)
 {
+
     app_list_t *tmp;
+    if (name == NULL && handle == app_none)
+        return 0;
     if (name == NULL)
         tmp = app_list_find_id(handle);
     else
         tmp = app_list_find(name);
     if (tmp == NULL)
         return 0;
+    if (app_loaded != NULL)
+    {
+        app_close(app_loaded->name, app_none);
+    }
+    app_loaded = &tmp->obj;
     if (tmp->func.app_load != NULL)
         tmp->func.app_load();
     return 1;
@@ -107,6 +116,8 @@ uint8_t app_load(const char *name, app_handle_t handle)
 uint8_t app_close(const char *name, app_handle_t handle)
 {
     app_list_t *tmp;
+    if (name == NULL && handle == app_none)
+        return 0;
     if (name == NULL)
         tmp = app_list_find_id(handle);
     else
@@ -115,12 +126,15 @@ uint8_t app_close(const char *name, app_handle_t handle)
         return 0;
     if (tmp->func.app_close != NULL)
         tmp->func.app_close();
+    app_loaded = NULL;
     return 1;
 }
 
 uint8_t app_kill(const char *name, app_handle_t handle)
 {
     app_list_t *tmp;
+    if (name == NULL && handle == app_none)
+        return 0;
     if (name == NULL)
         tmp = app_list_find_id(handle);
     else
@@ -182,4 +196,9 @@ app_obj_t *app_get(const char *name, app_handle_t handle)
     if (name == NULL)
         return (&app_list_find_id(handle)->obj);
     return (&app_list_find(name)->obj);
+}
+
+app_obj_t *app_get_loaded()
+{
+    return app_loaded;
 }

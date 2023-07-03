@@ -4,6 +4,13 @@
 #include "lcd_driver_interface.h"
 #include "device_interfaces.h"
 
+#include "usb_trans_app.h"
+#include "hc32_trans_app.h"
+#include "system_app.h"
+#include "btn_event_app.h"
+
+#include "desktop.h"
+
 /**
  * @brief 系统参数
  */
@@ -38,11 +45,26 @@ static RTC_FAST_ATTR uint8_t wake_mode = power_on;
 
 extern void app_startup_list();
 
+// static void load_desktop_cb(lv_timer_t *e)
+// {
+// }
+
 void system_init()
 {
     device_interface_init(); // 初始化接口程序
-    app_startup_list();      // 初始化应用程序
-    app_load("desktop", 0);  // 加载桌面
+
+    system_app_install();     // 安装系统APP
+    hc32_trans_app_install(); // 安装协处理器通信APP
+    usb_trans_app_install();  // 安装串口驱动程序
+    btn_event_app_install();  // 安装按键事件管理APP
+
+    system_take_gui_key();
+    app_startup_list(); // 初始化应用程序
+    // lv_timer_t *timer = lv_timer_create(load_desktop_cb, 1, NULL);
+    // lv_timer_set_repeat_count(timer, 1);
+    desktop_app_install();  // 安装桌面APP,放在最后
+    app_load("desktop", 0); // 加载桌面
+    system_give_gui_key();
 }
 
 static void system_data_init()
@@ -176,17 +198,36 @@ uint32_t system_get_screen_rest()
 void system_screen_keep_on(uint8_t en)
 {
     static uint32_t last_blk_rec = 0;
-    static uint8_t _en = 0;
+    static size_t _en = 0;
     static uint8_t _busy = 0;
-
-    if (_en == en)
-        return;
 
     while (_busy)
         ;
     _busy = 1;
 
-    _en = en;
+    if (en == 0 && _en == 0) // all false
+    {
+        _busy = 0;
+        return;
+    }
+
+    if (_en && en) // all true
+    {
+        _en++;
+        _busy = 0;
+        return;
+    }
+    if (_en > 1 && en == 0)
+    {
+        _en--;
+        _busy = 0;
+        return;
+    }
+
+    if (en)
+        _en++;
+    else
+        _en--;
 
     if (en)
     {
@@ -338,6 +379,20 @@ static void system_give_gui_key_cb(void *value, size_t lenth)
     system_give_gui_key();
 }
 
+uint8_t system_get_tp_type(uint8_t *ret)
+{
+    static uint8_t last_sta = 0;
+    if (ret == NULL)
+        return last_sta;
+    last_sta = *ret;
+    return last_sta;
+}
+
+static void system_get_tp_type_cb(void *value, size_t lenth)
+{
+    *(uint8_t *)value = system_get_tp_type(NULL);
+}
+
 static void sys_app_init()
 {
     system_data_init();
@@ -351,13 +406,18 @@ static void sys_app_init()
 
     btask_creat_ms(10, lcd_blk_task, btask_infinite, "lcd_blk_task", NULL); // 背光管理任务
 
-    key_value_register(NULL, "sys_set_blk", system_set_blk_cb); // 订阅设置背光事件
-    key_value_register(NULL, "sys_get_blk", system_get_blk_cb); // 订阅获取背光事件
+    key_value_register(NULL, "tp_type", system_get_tp_type_cb); // 订阅获取TP操作类型事件
 
+    key_value_register(NULL, "take_gui_key", system_take_gui_key_cb); // 订阅获取GUI增删权限事件
+    key_value_register(NULL, "give_gui_key", system_give_gui_key_cb); // 订阅归还GUI增删权限事件
+
+    key_value_register(NULL, "sys_always_on", system_screen_keep_on_cb); // 订阅背光常亮事件
     key_value_register(NULL, "sys_set_rest", system_set_screen_rest_cb); // 订阅设置息屏时间事件
     key_value_register(NULL, "sys_get_rest", system_get_screen_rest_cb); // 订阅设置息屏时间事件
     key_value_register(NULL, "sys_clr_rest", system_screen_rest_clr_cb); // 订阅重置息屏时间事件
-    key_value_register(NULL, "sys_always_on", system_screen_keep_on_cb); // 订阅背光常亮事件
+
+    key_value_register(NULL, "sys_set_blk", system_set_blk_cb); // 订阅设置背光事件
+    key_value_register(NULL, "sys_get_blk", system_get_blk_cb); // 订阅获取背光事件
 
     key_value_register(NULL, "sys_up_time", system_upload_time_cb); // 订阅更新时间事件
     key_value_register(NULL, "sys_set_time", system_set_time_cb);   // 订阅设置时间事件
@@ -373,9 +433,6 @@ static void sys_app_init()
 
     key_value_register(NULL, "sys_power_off", system_power_off_cb); // 订阅关机事件
     key_value_register(NULL, "sys_restart", system_restart_cb);     // 订阅重启事件
-
-    key_value_register(NULL, "take_gui_key", system_take_gui_key_cb); // 订阅获取GUI增删权限事件
-    key_value_register(NULL, "give_gui_key", system_give_gui_key_cb); // 订阅归还GUI增删权限事件
 }
 
 static void system_app_kill()

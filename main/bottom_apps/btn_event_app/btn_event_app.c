@@ -1,33 +1,28 @@
 #include "btn_event_app.h"
 #include "system_app.h"
 
-static void btn_event_task(void *arg)
+static void btn_event_task(btask_event_t *arg)
 {
-    vTaskDelay(10);
-    for (;;)
+    if (btn_available() == 0)
+        return;
+    btn_event_t ret;
+    btn_read_event(NULL, &ret);
+
+    key_value_msg("sys_btn", &ret, sizeof(btn_event_t));
+
+    if (ret == btn_down)
     {
-        vTaskDelay(10);
-        if (btn_available() == 0)
-            continue;
-        btn_event_t ret;
-        btn_read_event(NULL, &ret);
-
-        key_value_msg("sys_btn", &ret, sizeof(btn_event_t));
-
-        if (ret == btn_down)
-        {
-            system_screen_keep_on(1);
-        }
-        else if (ret == btn_up)
-        {
-            system_screen_keep_on(0);
-        }
+        system_screen_keep_on(1);
+    }
+    else if (ret == btn_up)
+    {
+        system_screen_keep_on(0);
     }
 }
 
 static void btn_event_app_init()
 {
-    xTaskCreatePinnedToCore(btn_event_task, "btn_event", 1024 * 4, NULL, configMAX_PRIORITIES, NULL, 0);
+    btask_creat_ms(20, btn_event_task, 0, "btn_event", NULL);
 }
 
 void btn_event_app_install()

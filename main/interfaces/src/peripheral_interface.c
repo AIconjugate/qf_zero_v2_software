@@ -2,11 +2,14 @@
 
 static void btn_tic_task(void *arg)
 {
-    static uint8_t last_level = 0;
-    if (last_level == 0 && gpio_get_level(BOTTON_IO) == 0)
-        return;
-    last_level = 1;
-    btn_tic_ms(BOTTON_TIC_MS);
+    vTaskDelay(1);
+    while (gpio_get_level(BOTTON_IO) == 0)
+        vTaskDelay(1);
+    for (;;)
+    {
+        btn_tic_ms(BOTTON_TIC_MS);
+        vTaskDelay(BOTTON_TIC_MS);
+    }
 }
 
 static void task_restart(void *arg)
@@ -51,12 +54,7 @@ void per_init()
     btn_attach(BOTTON_IO, 0);                          // 注册按键
     btn_attach_long_press_trig_cb(task_restart, NULL); // 注册按键长按重启功能
 
-    const esp_timer_create_args_t ms_tick_timer_args = {// Ticker心跳定时器
-                                                        .callback = &btn_tic_task,
-                                                        .name = "btn_tick"};
-    esp_timer_handle_t ms_tick_timer = NULL;
-    esp_timer_create(&ms_tick_timer_args, &ms_tick_timer);
-    esp_timer_start_periodic(ms_tick_timer, BOTTON_TIC_MS * 1000);
+    xTaskCreate(btn_tic_task, "btn_tick", 1024 * 3, NULL, configMAX_PRIORITIES, NULL);
 }
 
 void per_motor_set(uint8_t var)

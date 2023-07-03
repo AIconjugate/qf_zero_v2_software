@@ -13,7 +13,7 @@
 #define MOTOR_LEDC_FREQUENCY (1000)           // 频率
 
 #define BOTTON_IO 39
-#define BOTTON_TIC_MS 3 //按键扫描心跳速度
+#define BOTTON_TIC_MS 5 //按键扫描心跳速度
 
 /**
  * @brief 初始化外围设备

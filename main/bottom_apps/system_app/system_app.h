@@ -11,7 +11,7 @@
         3.时间
 */
 
-#define system_rest_sec_default 20
+#define system_rest_sec_default 5
 
 typedef struct
 {
@@ -33,7 +33,7 @@ typedef enum
 {
     power_on = 0,
     wake_up = 1
-}system_wake_t;
+} system_wake_t;
 
 /**
  * @brief 系统初始化，初始化底层接口，初始化APP
@@ -63,7 +63,7 @@ void system_restart();
 
 /**
  * @brief 获取唤醒模式
- * 
+ *
  * @return system_wake_t power_on（开机或重启） wake_up（休眠唤醒）
  */
 system_wake_t system_get_power_on_mode();
@@ -180,5 +180,13 @@ uint8_t system_get_usb_sta();
  * @param lenth 数据长度，字节
  */
 void hc32_trans_send_pack(const char *cmd, uint8_t *dat, size_t lenth);
+
+/**
+ * @brief 获取TP操作类型，可用于防止LVGL滑动切换SCREEN时误触按钮
+ *
+ * @param ret 0：点击操作，1：有滑动的操作
+ * @return uint8_t NULL:读取，不为NULL：设置
+ */
+uint8_t system_get_tp_type(uint8_t *ret);
 
 #endif

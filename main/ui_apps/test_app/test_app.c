@@ -2,12 +2,33 @@
 #include "system_app.h"
 #include "my_lv_symbol_font.h"
 
+LV_IMG_DECLARE(icon_desktop);
+
+static lv_obj_t *obj_test = NULL;
+static lv_timer_t *test_timer = NULL;
+
 typedef struct userdata
 {
     lv_obj_t *label_bat;
     lv_obj_t *label_time;
     lv_obj_t *label_usb;
 } userdata_t;
+
+static void gestrue_cb(lv_event_t *e)
+{
+    // key_value_msg("lv_gestrue", NULL, 0);
+    switch (lv_indev_get_gesture_dir(lv_indev_get_act()))
+    {
+    case LV_DIR_LEFT:
+
+        break;
+    case LV_DIR_RIGHT:
+
+        break;
+    default:
+        break;
+    }
+}
 
 void test_cb(lv_timer_t *e)
 {
@@ -46,32 +67,37 @@ static void test_app_load()
 
     reset_count++;
 
-    system_take_gui_key(); // 获取GUI增删权限
+    obj_test = lv_obj_create(NULL);
+    lv_obj_set_size(obj_test, LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_scrollbar_mode(obj_test, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(obj_test, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *slider = lv_slider_create(lv_scr_act());
+    lv_obj_t *slider = lv_slider_create(obj_test);
     lv_slider_set_range(slider, 0, 100);
     lv_slider_set_value(slider, system_get_blk(), LV_ANIM_ON);
     lv_obj_set_size(slider, 200, 30);
     lv_obj_center(slider);
     lv_obj_add_event_cb(slider, slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-    lv_obj_t *label = lv_label_create(lv_scr_act());
+    lv_obj_t *label = lv_label_create(obj_test);
     lv_obj_align_to(label, slider, LV_ALIGN_OUT_BOTTOM_MID, -20, 10);
     labels.label_usb = label;
 
-    lv_obj_t *label_reset = lv_label_create(lv_scr_act());
+    lv_obj_t *label_reset = lv_label_create(obj_test);
     lv_label_set_text_fmt(label_reset, "reset:%d", reset_count);
     lv_obj_align_to(label_reset, slider, LV_ALIGN_OUT_TOP_MID, 0, -80);
 
-    lv_obj_t *label_bat = lv_label_create(lv_scr_act());
+    lv_obj_t *label_bat = lv_label_create(obj_test);
     lv_obj_align_to(label_bat, slider, LV_ALIGN_OUT_TOP_MID, -40, -50);
     labels.label_bat = label_bat;
 
-    lv_obj_t *label_time = lv_label_create(lv_scr_act());
+    lv_obj_t *label_time = lv_label_create(obj_test);
     lv_obj_align_to(label_time, slider, LV_ALIGN_OUT_TOP_MID, -40, -10);
     labels.label_time = label_time;
 
-    system_give_gui_key(); // 归还GUI增删权限
+    lv_scr_load_anim(obj_test, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, 0);
+
+    lv_obj_add_event_cb(obj_test, gestrue_cb, LV_EVENT_GESTURE, NULL);
 
     // bmp280_trans_cb_t bmp_cb;
     // bmp_cb.bmp_read_bytes = (bmp280_read_bytes_cb_t)senser_iic_read_bytes;
@@ -80,19 +106,24 @@ static void test_app_load()
 
     // bmp280_begin();
 
-    lv_timer_create(test_cb, 10, &labels);
+    test_timer = lv_timer_create(test_cb, 10, &labels);
+}
+
+static void test_app_close()
+{
+    lv_timer_del(test_timer);
 }
 
 void test_app_install()
 {
     app_config_t cfg = {
-        .app_close = NULL,
+        .app_close = test_app_close,
         .app_init = NULL,
         .app_kill = NULL,
         .app_load = test_app_load,
         .app_power_off = NULL,
         .has_gui = 1,
-        .icon = &img_popcat_close,
+        .icon = &icon_desktop,
         .name = "test_app"};
     app_install(&cfg);
 }

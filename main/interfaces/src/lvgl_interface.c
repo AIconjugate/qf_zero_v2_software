@@ -19,11 +19,26 @@ static void lvgl_tic_cb(void *arg)
     xEventGroupSetBits(lvgl_event_group, 0x01);
 }
 
+// static void IRAM_ATTR te_intrHandler(void *arg)
+// {
+
+//     BaseType_t xHigherPriorityTaskWoken = pdFALSE, xResult;
+//     xResult = xEventGroupSetBitsFromISR(
+//         lvgl_event_group,
+//         0x01,
+//         &xHigherPriorityTaskWoken);
+
+//     if (xResult == pdPASS)
+//     {
+//         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+//     }
+// }
+
 static void lvgl_task(void *arg)
 {
     for (;;)
     {
-        xEventGroupWaitBits(lvgl_event_group, 0x1, pdTRUE, pdFALSE, LVGL_REFRESH_TIME_MS);
+        xEventGroupWaitBits(lvgl_event_group, 0x01, pdTRUE, pdFALSE, LVGL_REFRESH_TIME_MS);
         xSemaphoreTake(mutex_handle, portMAX_DELAY);
         lv_timer_handler();
         xSemaphoreGive(mutex_handle);
@@ -58,12 +73,16 @@ void lv_interface_init()
 
     xTaskCreate(lvgl_task, "lvgl", 1024 * 10, NULL, configMAX_PRIORITIES, NULL);
 
-    xTaskCreatePinnedToCore(lvgl_task, "lvgl", 1024 * 10, NULL, configMAX_PRIORITIES, NULL, LVGL_TASK_ON_CORE);
-
     const esp_timer_create_args_t ms_tick_timer_args = {// 心跳定时器
                                                         .callback = &lvgl_tic_cb,
                                                         .name = "lvgl_tic"};
     esp_timer_handle_t ms_tick_timer = NULL;
     esp_timer_create(&ms_tick_timer_args, &ms_tick_timer);
     esp_timer_start_periodic(ms_tick_timer, LVGL_REFRESH_TIME_MS * 1000);
+
+    // gpio_pad_select_gpio(LCD_PIN_NUM_TE);
+    // gpio_set_direction(LCD_PIN_NUM_TE, GPIO_MODE_INPUT);
+    // gpio_set_intr_type(LCD_PIN_NUM_TE, GPIO_INTR_POSEDGE);
+    // gpio_install_isr_service(0);
+    // gpio_isr_handler_add(LCD_PIN_NUM_TE, te_intrHandler, (void *)LCD_PIN_NUM_TE);
 }

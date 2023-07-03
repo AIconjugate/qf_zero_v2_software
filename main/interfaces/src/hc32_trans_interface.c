@@ -67,7 +67,7 @@ void hc32_trans_init()
 
     hc32_trans_handle = trans_packer_creat_trans(24, 64, look_cmd);
     trans_packer_set_write_cb(hc32_trans_handle, uart_hc32_write_bytes);
-    xTaskCreatePinnedToCore(rx_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL, 0);
+    xTaskCreate(rx_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
 
     gpio_config_t cfg = {
         .intr_type = GPIO_INTR_DISABLE,

@@ -23,14 +23,14 @@ extern "C"
 
     typedef struct _app_config_t
     {
-        const char *name;     // app名称，静态字符串
-        const void *icon;     // app图标，静态图标
-        void (*app_init)();   // 初始化APP入口，在安装app时运行一次
-        void (*app_kill)();   // 彻底关闭APP入口
-        void (*app_load)();   // 加载APP到前台入口
-        void (*app_close)();  // APP切到后台入口
-        void(*app_power_off)(); // 彻底关机处理函数，在此保存数据到EEPROM
-        uint8_t has_gui;      // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
+        const char *name;        // app名称，静态字符串
+        const void *icon;        // app图标，静态图标
+        void (*app_init)();      // 初始化APP入口，在安装app时运行一次
+        void (*app_kill)();      // 彻底关闭APP入口
+        void (*app_load)();      // 加载APP到前台入口
+        void (*app_close)();     // APP切到后台入口
+        void (*app_power_off)(); // 彻底关机处理函数，在此保存数据到EEPROM
+        uint8_t has_gui;         // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
     } app_config_t;
 
     typedef struct _app_obj_t
@@ -118,6 +118,13 @@ extern "C"
      * @return app_obj_t 指针，使用下标访问APP内容
      */
     app_obj_t *app_get(const char *name, app_handle_t handle);
+
+    /**
+     * @brief 获取前台程序
+     *
+     * @return app_obj_t*
+     */
+    app_obj_t *app_get_loaded();
 
 #ifdef __cplusplus
 }

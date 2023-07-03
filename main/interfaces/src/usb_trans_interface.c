@@ -57,7 +57,7 @@ void usb_trans_init()
     );
 
     usb_trans_handle = trans_packer_creat_trans(64, 128, look_string);
-    xTaskCreatePinnedToCore(rx_task, "uart_usb_rx", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL, 0);
+    xTaskCreate(rx_task, "uart_usb_rx", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL);
 
     key_value_register(NULL, "usb_handle", usb_trans_get_handle);
 }

@@ -69,7 +69,8 @@
         "typeinfo": "c",
         "system_app.h": "c",
         "cw2015.h": "c",
-        "lv_input_interface.h": "c"
+        "lv_input_interface.h": "c",
+        "algorithm": "c"
     },
     "cmake.configureOnOpen": false
 }
