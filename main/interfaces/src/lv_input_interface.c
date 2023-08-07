@@ -11,8 +11,8 @@ static void gesture_motor_off(btask_event_t *e)
 
 static void gesture_motor()
 {
-    system_set_motor(50);
-    btask_creat_ms(50, gesture_motor_off, 1, NULL, NULL);
+    system_set_motor(100);
+    btask_creat_ms(20, gesture_motor_off, 1, NULL, NULL);
 }
 
 static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)

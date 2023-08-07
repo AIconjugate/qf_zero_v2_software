@@ -11,7 +11,7 @@
         3.时间
 */
 
-#define system_rest_sec_default 5
+#define system_rest_sec_default 15
 
 typedef struct
 {

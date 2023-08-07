@@ -4,10 +4,10 @@
 // // PROJECT: Smartwatch
 
 // #include "ui_helpers.h"
-// #include "passive_peripheral.h"
+// // #include "passive_peripheral.h"
 
-// extern uint8_t blk_var_t;
-// extern uint32_t amituofo_t;
+// // extern uint8_t blk_var_t;
+// // extern uint32_t amituofo_t;
 
 // void _ui_bar_set_property(lv_obj_t *target, int id, int val)
 // {

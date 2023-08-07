@@ -98,18 +98,37 @@ uint8_t app_load(const char *name, app_handle_t handle)
     if (name == NULL && handle == app_none)
         return 0;
     if (name == NULL)
+    {
         tmp = app_list_find_id(handle);
+    }
     else
+    {
         tmp = app_list_find(name);
+    }
+    printf("0\n");
     if (tmp == NULL)
+    {
         return 0;
+    }
+    printf("1\n");
+
     if (app_loaded != NULL)
     {
+        printf("2\n");
+
         app_close(app_loaded->name, app_none);
     }
+    printf("3\n");
+
     app_loaded = &tmp->obj;
+    printf("4\n");
+
     if (tmp->func.app_load != NULL)
+    {
         tmp->func.app_load();
+    }
+    printf("5\n");
+
     return 1;
 }
 

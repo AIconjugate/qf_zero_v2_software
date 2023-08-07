@@ -30,7 +30,7 @@ extern "C"
 #define BMP280_ADDR (0x76) // 7bit器件IIC地址
 #endif
 #define BMP280_DEFAULT_CHIP_ID (0x58)  // ID寄存器
-#define BMP280_DEBUG 0                 // 调试输出信息,1:启用，0：关闭
+#define BMP280_DEBUG 1                 // 调试输出信息,1:启用，0：关闭
 #define BMP280_DEBUG_LOG_PRINTF printf // 日志输出使用的函数名
 
     typedef void (*bmp280_write_byte_cb_t)(uint8_t add, uint8_t reg, uint8_t dat);
@@ -61,9 +61,35 @@ extern "C"
      *
      * @param temp 指向存储温度的变量，如23.5°结果为235，不读取填NULL
      * @param pressure 指向存储气压的变量，不读取填NULL
-     * @return uint8_t 1：成功，0：失败
+     * @return uint8_t 0：成功，1：失败
      */
     uint8_t bmp280_read(int16_t *temp, int32_t *pressure);
+
+    /**
+     * @brief 读取温度、气压 ,读取后自动休眠
+     *
+     * @param temp 指向存储温度的变量，如23.5°结果为235，不读取填NULL
+     * @param pressure 指向存储气压的变量，不读取填NULL
+     * @return uint8_t 0：成功，1：失败
+     */
+    uint8_t bmp_280_read_once(int16_t *temp, int32_t *pressure);
+
+    /**
+     * @brief 获取海拔高度
+     *
+     * @param altitude 指向用于存储结果的变量
+     * @return uint8_t 0：成功，1：失败
+     */
+    uint8_t bmp280_get_altitude(float *altitude);
+
+    /**
+     * @brief 获取海拔高度,读取后自动休眠
+     *
+     * @param altitude 指向用于存储结果的变量
+     * @return uint8_t 0：成功，1：失败
+     *
+     */
+    uint8_t bmp280_get_altitude_once(float *altitude);
 
     /**
      * @brief 使能进入休眠

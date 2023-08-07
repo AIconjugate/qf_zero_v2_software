@@ -322,7 +322,7 @@
 //     if (tmp < 0)
 //         tmp += 3600;
 //     lv_img_set_angle(ui_min, tmp);
-
+ 
 //     lv_anim_t PropertyAnimation_0;
 //     lv_anim_init(&PropertyAnimation_0);
 //     lv_anim_set_time(&PropertyAnimation_0, 1000);

@@ -8,6 +8,59 @@ static lv_obj_t *memu_cont = NULL;
 static lv_obj_t *main_page = NULL;
 static app_handle_t desktop_id;
 
+typedef struct _desktop_watch_list_t
+{
+    desktop_watch_t watch;
+    size_t watch_id;
+    struct _desktop_watch_list_t *next;
+    struct _desktop_watch_list_t *last;
+} desktop_watch_list_t;
+
+static desktop_watch_list_t *head = NULL;
+static desktop_watch_list_t *tail = NULL;
+static desktop_watch_list_t *move = NULL;
+static RTC_FAST_ATTR size_t desktop_watch_id_save = 0;
+
+typedef enum
+{
+    watch_last,
+    watch_next
+} watch_switch_t;
+
+static void gestrue_cb(lv_event_t *e);
+static void desktop_load();
+
+static desktop_watch_list_t *get_watch(size_t id)
+{
+    desktop_watch_list_t *tmp = head;
+    for (size_t i = 0; i < id; i++)
+    {
+        tmp = tmp->next;
+    }
+    return tmp;
+}
+
+static void watch_switch(watch_switch_t type)
+{
+    printf("switch\n");
+
+    if (type == watch_last)
+    {
+        if (move->last == NULL)
+            return;
+        move = move->last;
+        return;
+    }
+    if (move->next == NULL)
+        return;
+    void (*close_func)() = move->watch.watch_close;
+    move = move->next;
+    main_page = move->watch.watch_load();
+    lv_obj_add_event_cb(main_page, gestrue_cb, LV_EVENT_GESTURE, NULL);
+    desktop_load();
+    close_func();
+}
+
 static void gestrue_cb(lv_event_t *e)
 {
 
@@ -16,16 +69,36 @@ static void gestrue_cb(lv_event_t *e)
     case LV_DIR_LEFT:
         if (lv_scr_act() == main_page)
         {
-            lv_scr_load_anim(memu_cont, LV_SCR_LOAD_ANIM_MOVE_LEFT, 100, 0, 0);
+            watch_switch(watch_next);
+        }
+        else
+        {
+            lv_scr_load_anim(main_page, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 100, 0, 0);
         }
 
         break;
     case LV_DIR_RIGHT:
-        if (lv_scr_act() == memu_cont)
+        if (lv_scr_act() == main_page)
         {
-            lv_scr_load_anim(main_page, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 100, 0, 0);
+            watch_switch(watch_last);
+        }
+        else
+        {
+            lv_scr_load_anim(main_page, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 100, 0, 0);
+        }
+        break;
+    case LV_DIR_TOP:
+        if (lv_scr_act() == main_page)
+        {
+            lv_scr_load_anim(memu_cont, LV_SCR_LOAD_ANIM_MOVE_TOP, 100, 0, 0);
         }
 
+        break;
+    case LV_DIR_BOTTOM:
+        // if (lv_scr_act() == memu_cont)
+        // {
+        //     lv_scr_load_anim(main_page, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 100, 0, 0);
+        // }
         break;
     default:
         break;
@@ -34,6 +107,7 @@ static void gestrue_cb(lv_event_t *e)
 
 static void scroll_event_cb(lv_event_t *e)
 {
+
     lv_obj_t *cont = lv_event_get_target(e);
 
     lv_area_t cont_a;
@@ -83,7 +157,6 @@ static void desktop_home_cb(void *value, size_t lenth)
 {
     if (app_get_handle(app_get_loaded()->name) == desktop_id)
         return;
-    // app_close(app_get_loaded()->name, app_none);
     app_load("desktop", app_none);
 }
 
@@ -95,6 +168,7 @@ static void app_click_cb(lv_event_t *e)
     {
         return; // 丢弃CLICK操作
     }
+    printf("app name:%s\n", (const char *)e->user_data);
     app_load((const char *)e->user_data, app_none);
 }
 
@@ -155,39 +229,34 @@ static void menu_load(void)
 
 static void desktop_init()
 {
-    // uint8_t blk = 100;
-    // key_value_msg("sys_set_blk", &blk, 1);
-
-    main_page = lv_obj_create(NULL);
-    lv_obj_set_size(main_page, LV_HOR_RES, LV_VER_RES);
-    lv_obj_set_scrollbar_mode(main_page, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_clear_flag(main_page, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(main_page, lv_color_hex(0), 0);
-
-    lv_obj_t *label = lv_label_create(main_page);
-    lv_label_set_text(label, "Desktop");
-    lv_obj_center(label);
-    lv_obj_set_style_text_color(label, lv_color_hex3(0xffffff), 0);
-
+    desktop_watch_list();
+    move = get_watch(desktop_watch_id_save);
+    main_page = move->watch.watch_load();
     lv_obj_add_event_cb(main_page, gestrue_cb, LV_EVENT_GESTURE, NULL);
-    key_value_register(NULL, "sys_home", desktop_home_cb);
-
     menu_load();
+    key_value_register(NULL, "sys_home", desktop_home_cb);
 }
 
 static void desktop_load()
 {
-    printf("desktop load\n");
     lv_scr_load_anim(main_page, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, 1);
 }
 
 static void desktop_close()
 {
-    printf("desktop close\n");
+    // printf("desktop close:%s,%d\n", move->watch->name, (uint32_t)move->watch);
+
+    // printf("fun2:%d,%d\n", (uint32_t)move->watch->watch_close, (uint32_t)move);
+
+    // vTaskDelay(100);
+
+    // if (move != NULL && move->watch.watch_close != NULL)
+    //     move->watch.watch_close();
 }
 
 static void desktop_kill()
 {
+    desktop_watch_id_save = move->watch_id;
     printf("desktop kill\n");
 }
 
@@ -208,4 +277,21 @@ void desktop_app_install()
         .icon = &icon_desktop,
         .name = "desktop"};
     desktop_id = app_install(&cfg);
+}
+
+void desktop_add_watch(desktop_watch_t *watch)
+{
+    desktop_watch_list_t *tmp = malloc(sizeof(desktop_watch_list_t));
+    if (tmp == NULL)
+        return;
+    static size_t cnt_id = 0;
+    tmp->watch = *watch;
+    tmp->next = NULL;
+    tmp->last = tail;
+    tmp->watch_id = cnt_id++;
+    tail = tmp;
+    if (head == NULL)
+    {
+        head = tmp;
+    }
 }

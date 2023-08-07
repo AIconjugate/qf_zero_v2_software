@@ -95,16 +95,9 @@ static void test_app_load()
     lv_obj_align_to(label_time, slider, LV_ALIGN_OUT_TOP_MID, -40, -10);
     labels.label_time = label_time;
 
-    lv_scr_load_anim(obj_test, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, 0);
+    lv_scr_load_anim(obj_test, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
 
     lv_obj_add_event_cb(obj_test, gestrue_cb, LV_EVENT_GESTURE, NULL);
-
-    // bmp280_trans_cb_t bmp_cb;
-    // bmp_cb.bmp_read_bytes = (bmp280_read_bytes_cb_t)senser_iic_read_bytes;
-    // bmp_cb.bmp_write_byte = (bmp280_write_byte_cb_t)senser_iic_write_byte;
-    // bmp280_attach_trans_cb(&bmp_cb);
-
-    // bmp280_begin();
 
     test_timer = lv_timer_create(test_cb, 10, &labels);
 }

@@ -60,8 +60,7 @@ void system_init()
 
     system_take_gui_key();
     app_startup_list(); // 初始化应用程序
-    // lv_timer_t *timer = lv_timer_create(load_desktop_cb, 1, NULL);
-    // lv_timer_set_repeat_count(timer, 1);
+
     desktop_app_install();  // 安装桌面APP,放在最后
     app_load("desktop", 0); // 加载桌面
     system_give_gui_key();
@@ -81,6 +80,7 @@ static void system_data_save()
 
 static void clock_run_tsak(void *arg) // 时间运行任务
 {
+    static uint8_t usb_sta = 0;
     sys_paras.data.time.sec++;
     if (sys_paras.data.time.sec == 60)
     {
@@ -100,6 +100,12 @@ static void clock_run_tsak(void *arg) // 时间运行任务
         }
     }
 
+    if (usb_sta != per_get_usb_online_sta())
+    {
+        usb_sta = !usb_sta;
+        sys_paras.data.screen_rest_count = 0;
+    }
+
     sys_paras.data.screen_rest_count++;
     if (sys_paras.data.screen_rest_count >= sys_paras.eeprom.screen_rest_sec)
     {
@@ -110,17 +116,20 @@ static void clock_run_tsak(void *arg) // 时间运行任务
     cw2015_get_info(&sys_paras.data.bat_info);
 }
 
-static void lcd_blk_task(btask_event_t *arg)
+static void lcd_blk_task(void *arg)
 {
-    static uint8_t now_blk = 0;
-
-    if (now_blk == sys_paras.data.lcd_blk)
-        return;
-    if (now_blk < sys_paras.data.lcd_blk)
-        now_blk++;
-    else if (now_blk > sys_paras.data.lcd_blk)
-        now_blk--;
-    lcd_set_blk(now_blk);
+    uint8_t now_blk = 0;
+    for (;;)
+    {
+        vTaskDelay(10);
+        if (now_blk == sys_paras.data.lcd_blk)
+            continue;
+        if (now_blk < sys_paras.data.lcd_blk)
+            now_blk++;
+        else if (now_blk > sys_paras.data.lcd_blk)
+            now_blk--;
+        lcd_set_blk(now_blk);
+    }
 }
 
 // static void per_info_updata_task(btask_event_t *arg)
@@ -404,7 +413,7 @@ static void sys_app_init()
     esp_timer_create(&ms_tick_timer_args, &ms_tick_timer);
     esp_timer_start_periodic(ms_tick_timer, 1000 * 1000);
 
-    btask_creat_ms(10, lcd_blk_task, btask_infinite, "lcd_blk_task", NULL); // 背光管理任务
+    xTaskCreate(lcd_blk_task, "blk_task", 1024 * 2, NULL, configMAX_PRIORITIES, NULL); // 背光管理任务
 
     key_value_register(NULL, "tp_type", system_get_tp_type_cb); // 订阅获取TP操作类型事件
 
@@ -433,6 +442,9 @@ static void sys_app_init()
 
     key_value_register(NULL, "sys_power_off", system_power_off_cb); // 订阅关机事件
     key_value_register(NULL, "sys_restart", system_restart_cb);     // 订阅重启事件
+
+    cw2015_get_info(&sys_paras.data.bat_info); // 同步一次电池信息
+    
 }
 
 static void system_app_kill()

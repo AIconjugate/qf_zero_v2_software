@@ -70,7 +70,9 @@
         "system_app.h": "c",
         "cw2015.h": "c",
         "lv_input_interface.h": "c",
-        "algorithm": "c"
+        "algorithm": "c",
+        "desktop.h": "c",
+        "app_manage.h": "c"
     },
     "cmake.configureOnOpen": false
 }

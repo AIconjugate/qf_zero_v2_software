@@ -123,7 +123,7 @@ uint8_t bmp280_read(int16_t *temp, int32_t *pressure)
     int32_t var1, var2, t_fine, p;
 
     if (_bmp_trans_cb.bmp_read_bytes == NULL)
-        return 0;
+        return 1;
 
     uint8_t tmp[3];
     _bmp_trans_cb.bmp_read_bytes(BMP280_ADDR, 0xFA, tmp, 3); // 读取温度
@@ -133,7 +133,7 @@ uint8_t bmp280_read(int16_t *temp, int32_t *pressure)
     adc_P = (tmp[0] << 12) | (tmp[1] << 4) | (tmp[2] >> 4);
 
     if (adc_P == 0)
-        return 0;
+        return 1;
 
     // Temperature
     var1 = (((float)adc_T) / 16384.0 - ((float)bmp280Cal.dig_T1) / 1024.0) * ((float)bmp280Cal.dig_T2);
@@ -157,7 +157,42 @@ uint8_t bmp280_read(int16_t *temp, int32_t *pressure)
     var2 = p * ((float)bmp280Cal.dig_P8) / 32768.0;
     p = p + (var1 + var2 + ((float)bmp280Cal.dig_P7)) / 16.0;
     *pressure = p;
-    return 1;
+    return 0;
+}
+
+static float pre_to_altitude(int32_t pre)
+{
+    return (44330.77f * (1.0f - pow(((float)pre / 100.0f / 1013.25f), 0.190284)));
+}
+
+uint8_t bmp280_get_altitude(float *altitude)
+{
+    int16_t temp;
+    int32_t pre;
+    if (bmp280_read(&temp, &pre))
+        return 1;
+
+    *altitude = pre_to_altitude(pre);
+    return 0;
+}
+
+uint8_t bmp_280_read_once(int16_t *temp, int32_t *pressure)
+{
+    bmp280_sleep(0);
+    uint8_t ret = bmp280_read(temp, pressure);
+    bmp280_sleep(1);
+    return ret;
+}
+
+uint8_t bmp280_get_altitude_once(float *altitude)
+{
+    int16_t temp;
+    int32_t pre;
+    if (bmp_280_read_once(&temp, &pre))
+        return 1;
+
+    *altitude = pre_to_altitude(pre);
+    return 0;
 }
 
 #endif

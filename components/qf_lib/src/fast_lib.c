@@ -12,17 +12,14 @@ inline int strcmp_my(const char *str1, const char *str2)
 
 uint8_t system_day_count_week(uint8_t year, uint8_t month, uint8_t day)
 {
-    int buf, buf2;
+    int _year = year;
     if (month < 3)
     {
-        buf = month + 12;
-        buf2 = year - 1;
+        month += 12;
+        _year -= 1;
+        if (_year < 0)
+            _year = 99;
     }
-    else
-    {
-        buf = month;
-        buf2 = year;
-    }
-    buf++;
-    return (buf2 + (buf2 >> 2) + (26 * buf / 10) + day - 36) % 7;
+
+    return (uint8_t)(day + 2 * month + 3 * (month + 1) / 5 + _year + _year / 4 - _year / 100 + _year / 400 + 1) % 7;
 }
