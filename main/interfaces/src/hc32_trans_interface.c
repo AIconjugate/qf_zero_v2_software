@@ -69,17 +69,6 @@ void hc32_trans_init()
     trans_packer_set_write_cb(hc32_trans_handle, uart_hc32_write_bytes);
     xTaskCreate(rx_task, "uart_rx_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
 
-    gpio_config_t cfg = {
-        .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_OUTPUT_OD,
-        .pin_bit_mask = (1ULL << esp_printf_io) | (1ULL << esp_sta_io),
-        .pull_down_en = 0,
-        .pull_up_en = 0};
-
-    gpio_config(&cfg);
-
-    gpio_set_level(esp_sta_io, 0); // 下拉状态位，通知副处理器设备已就绪
-
     trans_packer_send_pack(hc32_trans_handle, "get_time", NULL, 0);
 
     key_value_register(NULL, "hc32_handle", hc32_trans_get_handle);

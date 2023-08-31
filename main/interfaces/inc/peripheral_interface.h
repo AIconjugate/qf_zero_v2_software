@@ -5,6 +5,7 @@
 
 #define MOTOR_IO 48
 #define USB_ONLINE_IO 38
+#define ESP_PRINT_IO 46
 
 #define MOTOR_LEDC_TIMER LEDC_TIMER_0         // MOTOR定时器通道
 #define MOTOR_LEDC_MODE LEDC_LOW_SPEED_MODE   // 定时器模式

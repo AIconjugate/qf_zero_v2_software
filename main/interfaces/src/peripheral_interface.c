@@ -12,14 +12,14 @@ static void btn_tic_task(void *arg)
     }
 }
 
-static void task_restart(void *arg)
-{
-    esp_restart();
-}
-
-uint8_t btn_read_level(uint8_t io)
+static uint8_t btn_read_level(uint8_t io)
 {
     return gpio_get_level(io);
+}
+
+static void restart_cb(void *arg)
+{
+    esp_restart();
 }
 
 void per_init()
@@ -50,11 +50,16 @@ void per_init()
                          .pull_up_en = 0};
     gpio_config(&cfg);
 
-    btn_attach_read_io_func(btn_read_level);           // 注册读取按键电平函数
-    btn_attach(BOTTON_IO, 0);                          // 注册按键
-    btn_attach_long_press_trig_cb(task_restart, NULL); // 注册按键长按重启功能
+    btn_attach_read_io_func(btn_read_level); // 注册读取按键电平函数
+    btn_attach(BOTTON_IO, 0);                // 注册按键
 
     xTaskCreate(btn_tic_task, "btn_tick", 1024 * 3, NULL, configMAX_PRIORITIES, NULL);
+
+    gpio_pad_select_gpio(ESP_PRINT_IO);
+    gpio_set_direction(ESP_PRINT_IO, GPIO_MODE_INPUT);
+    gpio_set_intr_type(ESP_PRINT_IO, GPIO_INTR_NEGEDGE);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(ESP_PRINT_IO, restart_cb, (void *)ESP_PRINT_IO);
 }
 
 void per_motor_set(uint8_t var)

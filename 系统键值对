@@ -54,7 +54,7 @@
 
 #  设置振动器强度				"sys_set_motor"		0-100			        uint8_t
 #  获取USB连接状态				"sys_usb_sta"		0(无连接)或1(接入USB)	 uint8_t
-#  获取唤醒模式				"sys_wake_mode"		power_on或wake_up	    system_wake_t
+#  获取唤醒模式				    "sys_wake_mode"		power_on或wake_up	    system_wake_t
 
 #  关机                        "sys_power_off"     NULL                   0
 #  重启                        "sys_restart"       NULL                   0

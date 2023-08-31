@@ -6,7 +6,7 @@
 #define LCD_H_RES 240 // 水平分辨率
 #define LCD_V_RES 240 // 垂直分辨率
 
-#define LCD_PIXEL_CLOCK_HZ (16 * 1000 * 1000) // 总线频率
+#define LCD_PIXEL_CLOCK_HZ (20 * 1000 * 1000) // 总线频率
 
 // 8080接口IO定义
 #define LCD_PIN_NUM_DATA0 6

@@ -3,8 +3,8 @@
 
 idf_component_register( 
     #底层路径添加
-    SRC_DIRS        "src" "ui_apps/fonts" "ui_apps/imgs" "ui_apps/src" "interfaces/src" "data/src" 
-    INCLUDE_DIRS    "inc" "ui_apps/inc" "interfaces/inc" "data/inc" 
+    SRC_DIRS        "src"   "interfaces/src" "data/src" 
+    INCLUDE_DIRS    "inc"  "interfaces/inc" "data/inc" 
 
     #APP路径添加
     SRC_DIRS        "bottom_apps/btn_event_app" "bottom_apps/hc32_trans_app" 

@@ -85,7 +85,7 @@ extern "C"
 #define btn_long_press_en 1      // 长按编译使能
 #define btn_click_en 1           // 单击编译使能
 #define btn_double_click_en 1    // 双击编译使能
-#define btn_long_press_trig_en 1 // 长按时连续触发编译使能
+#define btn_long_press_trig_en 0 // 长按时连续触发编译使能
 
     typedef enum
     {

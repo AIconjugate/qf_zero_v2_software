@@ -14,11 +14,7 @@ static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_
 void lcd_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)drv->user_data;
-    int offsetx1 = area->x1;
-    int offsetx2 = area->x2;
-    int offsety1 = area->y1;
-    int offsety2 = area->y2;
-    esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, color_map); // (uint16_t *)&color_map->full
+    esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2 + 1, area->y2 + 1, color_map); // (uint16_t *)&color_map->full
 }
 
 void lcd_driver_init()

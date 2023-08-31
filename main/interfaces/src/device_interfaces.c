@@ -34,14 +34,18 @@ static void wait_hc32_ready()
     gpio_config_t cfg = {
         .intr_type = GPIO_INTR_DISABLE,
         .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = 1ULL << esp_sta_io,
+        .pin_bit_mask = 1ULL << ESP_STA_IO,
         .pull_down_en = 0,
         .pull_up_en = 0};
 
     gpio_config(&cfg);
     uint16_t tout = 0;
-    while (gpio_get_level(esp_sta_io) == 0 && tout++ < (1000 * 5)) // 等待副处理器初始化完成,超时未完成跳过等待
+    while (gpio_get_level(ESP_STA_IO) == 0 && tout++ < (1000 * 5)) // 等待副处理器初始化完成,超时未完成跳过等待
         vTaskDelay(1);
+    cfg.mode = GPIO_MODE_OUTPUT;
+    gpio_config(&cfg);
+
+    gpio_set_level(ESP_STA_IO, 0);//拉低状态  ESP上线
 }
 
 void device_interface_init()
@@ -63,5 +67,5 @@ void device_interface_init()
     esp_timer_create(&ms_tick_timer_args, &ms_tick_timer);
     esp_timer_start_periodic(ms_tick_timer, 1 * 1000);
 
-    xTaskCreate(btask_task, "btask", 1024 * 10, NULL, configMAX_PRIORITIES - 2, &btask_handle);
+    xTaskCreate(btask_task, "btask", 1024 * 5, NULL, configMAX_PRIORITIES - 2, &btask_handle);
 }

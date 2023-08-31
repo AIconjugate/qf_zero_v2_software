@@ -1,6 +1,5 @@
 #include "test_app.h"
 #include "system_app.h"
-#include "my_lv_symbol_font.h"
 
 LV_IMG_DECLARE(icon_desktop);
 

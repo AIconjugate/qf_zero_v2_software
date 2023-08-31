@@ -7,20 +7,12 @@ static trans_packer_handle_t *handle = NULL;
 static void hc32_trans_app_task(btask_event_t *arg)
 {
 
-    if (trans_packer_get_pack_num(handle))
+    if (trans_packer_get_pack_num(handle)) // 有数据包
     {
-        size_t name_len = trans_packer_get_pack_str_lenth(handle);
-        size_t dat_len = trans_packer_get_pack_data_lenth(handle);
-        const char *name = NULL;
-        uint8_t *dat = NULL;
-        if (name_len)
-            name = malloc(name_len);
-        if (dat_len)
-            dat = malloc(dat_len);
+        const char name[128];
+        uint8_t dat[128];
 
-        trans_packer_get_pack(handle, name, dat);
-
-#if 1
+        trans_packer_get_pack(handle, name, dat); // 读出数据包
 
         if (strcmp_my(name, "bat_info") == 0)
         {
@@ -31,10 +23,8 @@ static void hc32_trans_app_task(btask_event_t *arg)
             info.rtt = (dat[4] << 8) | dat[5];
             system_upload_bat(&info);
         }
-
         else if (strcmp_my(name, "time") == 0)
         {
-
             clock_time_t sys_time;
             sys_time.year = dat[0];
             sys_time.month = dat[1];
@@ -46,15 +36,14 @@ static void hc32_trans_app_task(btask_event_t *arg)
 
             system_upload_time(sys_time);
         }
+        else if (strcmp_my(name, "wake_info") == 0)
+        {
+            printf("wake:%d\n",dat[0]);
+        }
         else if (strcmp_my(name, "log") == 0)
         {
             printf("%s\n", dat);
         }
-#endif
-        if (name_len)
-            free((void *)name);
-        if (dat_len)
-            free(dat);
     }
 }
 

@@ -53,6 +53,10 @@ void system_init()
 {
     device_interface_init(); // 初始化接口程序
 
+    trans_packer_handle_t *hanlde;
+    key_value_msg("hc32_handle", &hanlde, 0);
+    trans_packer_send_pack(hanlde, "wake", NULL, 0); // 下发指令给副处理器通知ESP已唤醒
+
     system_app_install();     // 安装系统APP
     hc32_trans_app_install(); // 安装协处理器通信APP
     usb_trans_app_install();  // 安装串口驱动程序
@@ -263,6 +267,8 @@ static void system_get_screen_rest_cb(void *value, size_t lenth)
 
 void system_set_blk(uint8_t blk)
 {
+    if(blk < 1)
+        blk = 1;
     sys_paras.data.lcd_blk = blk;
 }
 
@@ -444,7 +450,6 @@ static void sys_app_init()
     key_value_register(NULL, "sys_restart", system_restart_cb);     // 订阅重启事件
 
     cw2015_get_info(&sys_paras.data.bat_info); // 同步一次电池信息
-    
 }
 
 static void system_app_kill()

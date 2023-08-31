@@ -6,9 +6,6 @@
 #define txd_hc32_io 2
 #define rxd_hc32_io 1
 
-#define esp_printf_io 46
-#define esp_sta_io 42
-
 #define HC32_TRANS_UART_NUM UART_NUM_2
 #define hc32_trans_band 9600
 

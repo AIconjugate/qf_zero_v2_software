@@ -72,7 +72,8 @@
         "lv_input_interface.h": "c",
         "algorithm": "c",
         "desktop.h": "c",
-        "app_manage.h": "c"
+        "app_manage.h": "c",
+        "spi_common.h": "c"
     },
     "cmake.configureOnOpen": false
 }
