@@ -394,7 +394,7 @@ static void system_give_gui_key_cb(void *value, size_t lenth)
     system_give_gui_key();
 }
 
-uint8_t system_get_tp_type(uint8_t *ret)
+uint8_t system_tp_type(uint8_t *ret)
 {
     static uint8_t last_sta = 0;
     if (ret == NULL)
@@ -405,7 +405,7 @@ uint8_t system_get_tp_type(uint8_t *ret)
 
 static void system_get_tp_type_cb(void *value, size_t lenth)
 {
-    *(uint8_t *)value = system_get_tp_type(NULL);
+    *(uint8_t *)value = system_tp_type(NULL);
 }
 
 static void sys_app_init()

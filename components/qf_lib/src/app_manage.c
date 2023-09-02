@@ -78,6 +78,7 @@ app_handle_t app_install(app_config_t *cfg)
     app->func.app_kill = cfg->app_kill;
 
     app->obj.name = cfg->name;
+    app->obj.name_font = cfg->name_font;
     app->obj.icon = cfg->icon;
     *(uint8_t *)&app->obj.has_gui = cfg->has_gui;
 

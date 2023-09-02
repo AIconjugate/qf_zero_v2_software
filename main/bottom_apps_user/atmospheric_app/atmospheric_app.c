@@ -36,6 +36,7 @@ void atmospheric_app_install()
         .app_load = NULL,
         .has_gui = 0,
         .icon = NULL,
-        .name = "atmospheric_app"};
+        .name = "atmospheric_app",
+        .name_font = NULL};
     app_install(&cfg);
 }

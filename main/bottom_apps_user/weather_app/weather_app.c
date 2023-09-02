@@ -33,6 +33,7 @@ void weather_app_install()
         .app_load = NULL,
         .has_gui = 0,
         .icon = NULL,
-        .name = "weather_app"};
+        .name = "weather_app",
+        .name_font = NULL};
     app_install(&cfg);
 }

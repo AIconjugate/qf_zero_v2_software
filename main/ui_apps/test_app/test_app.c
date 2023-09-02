@@ -1,7 +1,9 @@
 #include "test_app.h"
 #include "system_app.h"
+#include "desktop.h"
 
-LV_IMG_DECLARE(icon_desktop);
+LV_IMG_DECLARE(test_app_icon);
+LV_FONT_DECLARE(test_app_font_24);
 
 static lv_obj_t *obj_test = NULL;
 static lv_timer_t *test_timer = NULL;
@@ -19,9 +21,11 @@ static void gestrue_cb(lv_event_t *e)
     switch (lv_indev_get_gesture_dir(lv_indev_get_act()))
     {
     case LV_DIR_LEFT:
+        key_value_msg("sys_home", NULL, 0);
 
         break;
     case LV_DIR_RIGHT:
+        key_value_msg("sys_home", NULL, 0);
 
         break;
     default:
@@ -94,11 +98,11 @@ static void test_app_load()
     lv_obj_align_to(label_time, slider, LV_ALIGN_OUT_TOP_MID, -40, -10);
     labels.label_time = label_time;
 
-    lv_scr_load_anim(obj_test, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
-
     lv_obj_add_event_cb(obj_test, gestrue_cb, LV_EVENT_GESTURE, NULL);
 
     test_timer = lv_timer_create(test_cb, 10, &labels);
+
+    app_scr_load(obj_test, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0);
 }
 
 static void test_app_close()
@@ -115,7 +119,8 @@ void test_app_install()
         .app_load = test_app_load,
         .app_power_off = NULL,
         .has_gui = 1,
-        .icon = &icon_desktop,
-        .name = "test_app"};
+        .icon = &test_app_icon,
+        .name = "临时测试",
+        .name_font = &test_app_font_24};
     app_install(&cfg);
 }

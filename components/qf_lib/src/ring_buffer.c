@@ -7,8 +7,11 @@ ring_buffer_handle_t ring_buffer_create(ring_buffer_sample_t sample, ring_buffer
     ring_buffer_t *handle = NULL;
     void *buffer = NULL;
     int len = sample;
+
+#if ring_buffer_suppot_float
     if (sample == sample_float)
         len = sizeof(float);
+#endif
 
     len *= size;
 
@@ -239,7 +242,7 @@ void ring_buffer_write(ring_buffer_handle_t handle, void *dat)
             break;
 #endif
 
-#if ring_buffer_suppot_8bit
+#if ring_buffer_suppot_16bit
         case sample_16bit:
             handle->buffer_16[handle->add_p] = *(uint16_t *)dat;
 #if ring_buffer_moving_flitering_en
@@ -249,7 +252,7 @@ void ring_buffer_write(ring_buffer_handle_t handle, void *dat)
             break;
 #endif
 
-#if ring_buffer_suppot_8bit
+#if ring_buffer_suppot_32bit
         case sample_32bit:
             handle->buffer_32[handle->add_p] = *(uint32_t *)dat;
 #if ring_buffer_moving_flitering_en

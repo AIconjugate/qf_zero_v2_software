@@ -182,11 +182,11 @@ uint8_t system_get_usb_sta();
 void hc32_trans_send_pack(const char *cmd, uint8_t *dat, size_t lenth);
 
 /**
- * @brief 获取TP操作类型，可用于防止LVGL滑动切换SCREEN时误触按钮
+ * @brief TP操作类型，可用于防止LVGL滑动切换SCREEN时误触按钮
  *
  * @param ret 0：点击操作，1：有滑动的操作
  * @return uint8_t NULL:读取，不为NULL：设置
  */
-uint8_t system_get_tp_type(uint8_t *ret);
+uint8_t system_tp_type(uint8_t *ret);
 
 #endif

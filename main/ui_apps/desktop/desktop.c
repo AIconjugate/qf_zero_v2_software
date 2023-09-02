@@ -2,7 +2,6 @@
 #include "system_app.h"
 
 LV_IMG_DECLARE(icon_desktop);
-LV_IMG_DECLARE(desktop_wallpaper_dog_fly);
 
 static lv_obj_t *memu_cont = NULL;
 static lv_obj_t *main_page = NULL;
@@ -175,7 +174,6 @@ static void app_click_cb(lv_event_t *e)
 static void menu_load(void)
 {
     memu_cont = lv_obj_create(NULL);
-    lv_obj_remove_style_all(memu_cont);
 
     lv_obj_set_style_pad_all(memu_cont, 25, LV_PART_MAIN);
     lv_obj_set_style_pad_row(memu_cont, 10, LV_PART_MAIN);
@@ -187,7 +185,8 @@ static void menu_load(void)
     lv_obj_set_scroll_snap_y(memu_cont, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(memu_cont, LV_SCROLLBAR_MODE_OFF);
 
-    lv_obj_set_style_bg_img_src(memu_cont, &desktop_wallpaper_dog_fly, LV_PART_MAIN);
+    //lv_obj_set_style_bg_color(memu_cont, lv_color_hex(0), 0);
+    lv_obj_set_style_bg_img_src(memu_cont, &desktop_bg_default, LV_PART_MAIN);
 
     uint32_t i;
     for (i = 0; i < app_get_cnt() - 1; i++)
@@ -198,8 +197,8 @@ static void menu_load(void)
 
         lv_obj_t *btn = lv_btn_create(memu_cont);
         lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, LV_PART_MAIN);
-        lv_obj_set_width(btn, lv_pct(95));
-        lv_obj_set_height(btn, 64 + 8);
+        lv_obj_set_width(btn, lv_pct(98));
+        lv_obj_set_height(btn, 40);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x626973), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(btn, 200, LV_PART_MAIN);
 
@@ -208,12 +207,15 @@ static void menu_load(void)
             lv_img_set_src(img, app->icon);
         else
             lv_img_set_src(img, &icon_desktop);
-        lv_obj_align(img, LV_ALIGN_LEFT_MID, 4, 0);
+        lv_obj_align(img, LV_ALIGN_LEFT_MID, 3, 0);
 
         lv_obj_t *label = lv_label_create(btn);
         lv_label_set_text(label, app_get_name(i));
 
-        lv_obj_align_to(label, img, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+        if (app->name_font != NULL)
+            lv_obj_set_style_text_font(label, (const lv_font_t *)app->name_font, 0);
+
+        lv_obj_align_to(label, img, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 
         lv_obj_add_event_cb(btn, app_click_cb, LV_EVENT_CLICKED, (void *)app_get_name(i));
     }
@@ -263,6 +265,11 @@ static void desktop_kill()
 static void desktop_power_off()
 {
     printf("desktop power off\n");
+}
+
+void app_scr_load(lv_obj_t *scr, lv_scr_load_anim_t anim_type, uint32_t time, uint32_t delay)
+{
+    lv_scr_load_anim(scr, anim_type, time, delay, false); // 加载界面
 }
 
 void desktop_app_install()

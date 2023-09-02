@@ -3,35 +3,50 @@
 #include "system_app.h"
 
 static lv_indev_t *indev_tp_handle = NULL;
+static ring_buffer_handle_t ring_handle_x = NULL;
+static ring_buffer_handle_t ring_handle_y = NULL;
 
-static void gesture_motor_off(btask_event_t *e)
-{
-    system_set_motor(0);
-}
+// static void gesture_motor_off(btask_event_t *e)
+// {
+//     system_set_motor(0);
+// }
 
-static void gesture_motor()
-{
-    system_set_motor(100);
-    btask_creat_ms(20, gesture_motor_off, 1, NULL, NULL);
-}
+// static void gesture_motor()
+// {
+//     system_set_motor(100);
+//     btask_creat_ms(20, gesture_motor_off, 1, NULL, NULL);
+// }
 
 static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
 {
     static cst816_info_t info;
     static uint8_t clr_flg = 0;
-    static uint32_t start_t;
+    // static uint32_t start_t;
+
     cst816_read_info(&info);
     if (info.state == tp_touching)
     {
         if (clr_flg == 0) // 触摸时背光常亮
         {
+            ring_buffer_init_value(ring_handle_x, &info.now_x);
+            ring_buffer_init_value(ring_handle_y, &info.now_y);
+
             clr_flg = 1;
-            start_t = esp_log_timestamp();
+            // start_t = esp_log_timestamp();
             system_screen_keep_on(1);
         }
+        else
+        {
+            ring_buffer_write(ring_handle_x, &info.now_x);
+            ring_buffer_write(ring_handle_y, &info.now_y);
+        }
 
-        data->point.x = info.now_x;
-        data->point.y = info.now_y;
+        uint16_t nx = 0, ny = 0;
+        ring_buffer_get_moveing_flitering(ring_handle_x, &nx);
+        ring_buffer_get_moveing_flitering(ring_handle_y, &ny);
+
+        data->point.x = nx;
+        data->point.y = ny;
         data->state = LV_INDEV_STATE_PRESSED;
     }
     else
@@ -52,67 +67,70 @@ static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
             {
                 tmp = 1;
             }
-            system_get_tp_type(&tmp);
+            system_tp_type(&tmp);
 
             clr_flg = 0;
             system_screen_keep_on(0);
+            data->point.x = info.end_x;
+            data->point.y = info.end_y;
         }
+
         data->state = LV_INDEV_STATE_RELEASED;
     }
-    if (info.gesture != tp_gesture_none)
-    {
-        if (info.gesture == tp_gesture_down && info.start_y < tp_gesture_threshold)
-        {
-            if (info.now_y > (LCD_V_RES - (LCD_V_RES / 3)))
-                key_value_msg("sys_status_bar", NULL, 0);
-            return;
-        }
+    // if (info.gesture != tp_gesture_none)
+    // {
+    //     if (info.gesture == tp_gesture_down && info.start_y < tp_gesture_threshold)
+    //     {
+    //         if (info.now_y > (LCD_V_RES - (LCD_V_RES / 3)))
+    //             key_value_msg("sys_status_bar", NULL, 0);
+    //         return;
+    //     }
 
-        if ((esp_log_timestamp() - start_t) < tp_gesture_hold_time_ms)
-            return;
+    //     if ((esp_log_timestamp() - start_t) < tp_gesture_hold_time_ms)
+    //         return;
 
-        // 手指松开时必须在中心1/4才生效
-        if (info.now_y < (LCD_V_RES / 2 - (LCD_V_RES / 8)))
-            return;
-        if (info.now_y > (LCD_V_RES / 2 + (LCD_V_RES / 8)))
-            return;
-        if (info.now_x < (LCD_H_RES / 2 - (LCD_H_RES / 8)))
-            return;
-        if (info.now_x > (LCD_H_RES / 2 + (LCD_H_RES / 8)))
-            return;
+    //     // 手指松开时必须在中心1/4才生效
+    //     if (info.now_y < (LCD_V_RES / 2 - (LCD_V_RES / 8)))
+    //         return;
+    //     if (info.now_y > (LCD_V_RES / 2 + (LCD_V_RES / 8)))
+    //         return;
+    //     if (info.now_x < (LCD_H_RES / 2 - (LCD_H_RES / 8)))
+    //         return;
+    //     if (info.now_x > (LCD_H_RES / 2 + (LCD_H_RES / 8)))
+    //         return;
 
-        switch (info.gesture)
-        {
-        case tp_gesture_up:
-            if (info.start_y > (LCD_V_RES - tp_gesture_threshold))
-            {
-                key_value_msg("sys_home", NULL, 0);
-                gesture_motor();
-            }
-            break;
+    //     switch (info.gesture)
+    //     {
+    //     case tp_gesture_up:
+    //         if (info.start_y > (LCD_V_RES - tp_gesture_threshold))
+    //         {
+    //             key_value_msg("sys_home", NULL, 0);
+    //             gesture_motor();
+    //         }
+    //         break;
 
-        case tp_gesture_left:
-            if (info.start_x > (240 - tp_gesture_threshold))
-            {
-                key_value_msg("sys_back", NULL, 0);
-                gesture_motor();
-            }
-            break;
+    //     case tp_gesture_left:
+    //         if (info.start_x > (240 - tp_gesture_threshold))
+    //         {
+    //             key_value_msg("sys_back", NULL, 0);
+    //             gesture_motor();
+    //         }
+    //         break;
 
-        case tp_gesture_right:
-            if (info.start_x < tp_gesture_threshold)
-            {
-                key_value_msg("sys_back", NULL, 0);
-                gesture_motor();
-            }
-            break;
+    //     case tp_gesture_right:
+    //         if (info.start_x < tp_gesture_threshold)
+    //         {
+    //             key_value_msg("sys_back", NULL, 0);
+    //             gesture_motor();
+    //         }
+    //         break;
 
-        default:
-            break;
-        }
-        info.gesture = tp_gesture_none;
-        // 添加手势功能
-    }
+    //     default:
+    //         break;
+    //     }
+    //     info.gesture = tp_gesture_none;
+    //     // 添加手势功能
+    // }
 }
 
 /**
@@ -175,6 +193,20 @@ void lv_input_tp_init()
     tp_indev.type = LV_INDEV_TYPE_POINTER;
     tp_indev.read_cb = tp_lvgl_read_cb;
     indev_tp_handle = lv_indev_drv_register(&tp_indev);
+
+    ring_handle_x = ring_buffer_create(sample_16bit, 0, 5);
+    ring_handle_y = ring_buffer_create(sample_16bit, 0, 5);
+    if (ring_handle_x == NULL)
+    {
+        printf("c null\n");
+    }
+    else
+    {
+        printf("c ok\n");
+    }
+
+    ring_buffer_set_moveing_flitering_en(ring_handle_x, 1);
+    ring_buffer_set_moveing_flitering_en(ring_handle_y, 1);
 }
 
 lv_indev_t *lv_input_get_handle()

@@ -24,6 +24,7 @@ extern "C"
     typedef struct _app_config_t
     {
         const char *name;        // app名称，静态字符串
+        const void *name_font;   // 名称使用的字体
         const void *icon;        // app图标，静态图标
         void (*app_init)();      // 初始化APP入口，在安装app时运行一次
         void (*app_kill)();      // 彻底关闭APP入口
@@ -36,6 +37,7 @@ extern "C"
     typedef struct _app_obj_t
     {
         const char *name;      // app名称，静态字符串
+        const void *name_font; // 指向app名称使用的字体
         const void *icon;      // app图标，静态图标
         const uint8_t has_gui; // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
     } app_obj_t;

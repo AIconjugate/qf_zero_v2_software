@@ -21,6 +21,7 @@ void mems_app_install()
         .app_load = NULL,
         .has_gui = 0,
         .icon = NULL,
-        .name = "mems_app"};
+        .name = "mems_app",
+        .name_font = NULL};
     app_install(&cfg);
 }
