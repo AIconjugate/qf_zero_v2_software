@@ -9,7 +9,10 @@ extern "C"
     /*
         Chinese is encoded in Unicode. If it is garbled, please change the encoding method of the editor.
         简单键值对数据交互库 By启凡科创
-        version:v1.0.0  2023-6-17
+        version:v1.0.1  2023-9-3
+
+        1.0.1:
+            修复删除句柄指针跑飞问题
     */
 
 #include <stdint.h>

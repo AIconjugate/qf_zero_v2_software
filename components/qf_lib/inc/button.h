@@ -69,7 +69,7 @@ extern "C"
 #if BUTTON_NUM
 
 #ifndef BUTTON_BUFFER_NUM
-#define BUTTON_BUFFER_NUM 3 ////按钮存储缓冲区大小，此数值为最多存储多少个按钮,至少为1，不要比实际使用多设置，会消耗内存并占用更多cpu
+#define BUTTON_BUFFER_NUM 10 ////按钮存储缓冲区大小，此数值为最多存储多少个按钮,至少为1，不要比实际使用多设置，会消耗内存并占用更多cpu
 #endif
 
 #define btn_double_click_time_default 300         // 双击识别间隔时间  默认300ms

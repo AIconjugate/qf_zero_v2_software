@@ -2,6 +2,7 @@
 #include "system_app.h"
 
 LV_IMG_DECLARE(icon_desktop);
+LV_IMG_DECLARE(desktop_img_set_blk);
 
 static lv_obj_t *memu_cont = NULL;
 static lv_obj_t *main_page = NULL;
@@ -26,8 +27,88 @@ typedef enum
     watch_next
 } watch_switch_t;
 
+typedef struct
+{
+    uint8_t sta : 1;
+    uint8_t change_flg : 1;
+    uint8_t set_flg : 1;
+} blk_sta_t;
+
+static blk_sta_t blk;
+static key_value_handle_t tp_double_handle = NULL;
+static lv_timer_t *btn_timer = NULL;
+
 static void gestrue_cb(lv_event_t *e);
 static void desktop_load();
+
+static void tp_double_cb(void *value, size_t lenth)
+{
+    blk.change_flg = 1;
+    blk.sta = 1;
+    blk.set_flg = 1;
+}
+
+static void scr_pressed_cb(lv_event_t *e)
+{
+    blk.change_flg = 1;
+    blk.sta = 0;
+}
+
+static void set_blk_slider_cb(lv_event_t *e)
+{
+    uint8_t tmp = lv_slider_get_value(e->target);
+    key_value_msg("sys_set_blk", &tmp, 1);
+}
+
+static void btn_timer_cb(lv_timer_t *e)
+{
+
+    if (blk.change_flg == 0)
+        return;
+    blk.change_flg = 0;
+
+    static lv_obj_t *slider = NULL;
+
+    if (blk.sta == 1)
+    {
+        if (slider != NULL)
+            return;
+
+        slider = lv_slider_create(lv_scr_act());
+        lv_obj_set_size(slider, 200, 100);
+        lv_obj_center(slider);
+        lv_obj_remove_style(slider, NULL, LV_PART_KNOB);
+        lv_obj_set_style_bg_color(slider, lv_color_hex(0x3B3B3B), LV_PART_MAIN);
+        lv_obj_set_style_bg_opa(slider, 255, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(slider, lv_color_hex(0xffffff), LV_PART_INDICATOR);
+        lv_slider_set_range(slider, 1, 100);
+        uint8_t tmp = 0;
+        key_value_msg("sys_get_blk", &tmp, 1);
+        lv_slider_set_value(slider, tmp, LV_ANIM_OFF);
+        lv_obj_add_event_cb(slider, set_blk_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+        lv_obj_t *img = lv_img_create(slider);
+        lv_img_set_src(img, &desktop_img_set_blk);
+        lv_obj_center(img);
+        return;
+    }
+
+    if (slider == NULL)
+        return;
+
+    lv_obj_del(slider);
+    slider = NULL;
+    blk.set_flg = 0;
+}
+
+static void load_end_cb(lv_event_t *e)
+{
+    blk.change_flg = 0;
+    blk.set_flg = 0;
+    key_value_register(&tp_double_handle, "tp_double", tp_double_cb);
+    btn_timer = lv_timer_create(btn_timer_cb, 20, NULL);
+    lv_timer_set_repeat_count(btn_timer, -1);
+}
 
 static desktop_watch_list_t *get_watch(size_t id)
 {
@@ -55,7 +136,9 @@ static void watch_switch(watch_switch_t type)
     void (*close_func)() = move->watch.watch_close;
     move = move->next;
     main_page = move->watch.watch_load();
+    lv_obj_add_event_cb(main_page, load_end_cb, LV_EVENT_SCREEN_LOADED, NULL);
     lv_obj_add_event_cb(main_page, gestrue_cb, LV_EVENT_GESTURE, NULL);
+    lv_obj_add_event_cb(main_page, scr_pressed_cb, LV_EVENT_PRESSED, NULL);
     desktop_load();
     close_func();
 }
@@ -185,7 +268,7 @@ static void menu_load(void)
     lv_obj_set_scroll_snap_y(memu_cont, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(memu_cont, LV_SCROLLBAR_MODE_OFF);
 
-    //lv_obj_set_style_bg_color(memu_cont, lv_color_hex(0), 0);
+    // lv_obj_set_style_bg_color(memu_cont, lv_color_hex(0), 0);
     lv_obj_set_style_bg_img_src(memu_cont, &desktop_bg_default, LV_PART_MAIN);
 
     uint32_t i;
@@ -234,7 +317,9 @@ static void desktop_init()
     desktop_watch_list();
     move = get_watch(desktop_watch_id_save);
     main_page = move->watch.watch_load();
+    lv_obj_add_event_cb(main_page, load_end_cb, LV_EVENT_SCREEN_LOADED, NULL);
     lv_obj_add_event_cb(main_page, gestrue_cb, LV_EVENT_GESTURE, NULL);
+    lv_obj_add_event_cb(main_page, scr_pressed_cb, LV_EVENT_PRESSED, NULL);
     menu_load();
     key_value_register(NULL, "sys_home", desktop_home_cb);
 }
@@ -246,6 +331,17 @@ static void desktop_load()
 
 static void desktop_close()
 {
+    if (btn_timer != NULL)
+    {
+        lv_timer_del(btn_timer);
+        btn_timer = NULL;
+    }
+    if (tp_double_handle != NULL)
+    {
+        key_value_del(tp_double_handle);
+        tp_double_handle = NULL;
+    }
+
     // printf("desktop close:%s,%d\n", move->watch->name, (uint32_t)move->watch);
 
     // printf("fun2:%d,%d\n", (uint32_t)move->watch->watch_close, (uint32_t)move);
@@ -282,7 +378,8 @@ void desktop_app_install()
         .app_power_off = desktop_power_off,
         .has_gui = 1,
         .icon = &icon_desktop,
-        .name = "desktop"};
+        .name = "desktop",
+        .name_font = NULL};
     desktop_id = app_install(&cfg);
 }
 

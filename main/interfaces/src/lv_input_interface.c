@@ -5,6 +5,7 @@
 static lv_indev_t *indev_tp_handle = NULL;
 static ring_buffer_handle_t ring_handle_x = NULL;
 static ring_buffer_handle_t ring_handle_y = NULL;
+static uint8_t tp_touch_sta = 0;
 
 // static void gesture_motor_off(btask_event_t *e)
 // {
@@ -17,22 +18,28 @@ static ring_buffer_handle_t ring_handle_y = NULL;
 //     btask_creat_ms(20, gesture_motor_off, 1, NULL, NULL);
 // }
 
+static void get_tp_touch_sta_cb(void *value, size_t lenth)
+{
+    *(uint8_t *)value = tp_touch_sta;
+}
+
 static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
 {
     static cst816_info_t info;
     static uint8_t clr_flg = 0;
-    // static uint32_t start_t;
+    static uint32_t start_t = 0;
 
     cst816_read_info(&info);
     if (info.state == tp_touching)
     {
         if (clr_flg == 0) // 触摸时背光常亮
         {
+            tp_touch_sta = 1;
             ring_buffer_init_value(ring_handle_x, &info.now_x);
             ring_buffer_init_value(ring_handle_y, &info.now_y);
 
             clr_flg = 1;
-            // start_t = esp_log_timestamp();
+
             system_screen_keep_on(1);
         }
         else
@@ -53,6 +60,7 @@ static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
     {
         if (clr_flg == 1) // 释放背光常亮
         {
+            tp_touch_sta = 0;
             uint8_t tmp = 0;
             int16_t cha = (int16_t)info.start_x - (int16_t)info.end_x;
             if (cha < 2 && cha > -2)
@@ -62,6 +70,14 @@ static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
                 {
                     tmp = 1;
                 }
+
+                printf("t:%d\n", esp_log_timestamp() - start_t);
+                if ((esp_log_timestamp() - start_t) <= 300)
+                {
+                    key_value_msg("tp_double", NULL, 0);
+                }
+
+                start_t = esp_log_timestamp();
             }
             else
             {
@@ -196,17 +212,11 @@ void lv_input_tp_init()
 
     ring_handle_x = ring_buffer_create(sample_16bit, 0, 5);
     ring_handle_y = ring_buffer_create(sample_16bit, 0, 5);
-    if (ring_handle_x == NULL)
-    {
-        printf("c null\n");
-    }
-    else
-    {
-        printf("c ok\n");
-    }
 
     ring_buffer_set_moveing_flitering_en(ring_handle_x, 1);
     ring_buffer_set_moveing_flitering_en(ring_handle_y, 1);
+
+    key_value_register(NULL, "tp_sta", get_tp_touch_sta_cb);
 }
 
 lv_indev_t *lv_input_get_handle()

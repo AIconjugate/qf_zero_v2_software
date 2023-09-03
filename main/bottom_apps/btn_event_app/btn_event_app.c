@@ -8,15 +8,29 @@ static void btn_event_task(btask_event_t *arg)
     btn_event_t ret;
     btn_read_event(NULL, &ret);
 
-    key_value_msg("sys_btn", &ret, sizeof(btn_event_t));
+    // key_value_msg("sys_btn", &ret, sizeof(btn_event_t));
 
     if (ret == btn_down)
     {
         system_screen_keep_on(1);
+        key_value_msg("btn_down", NULL, 0);
     }
     else if (ret == btn_up)
     {
         system_screen_keep_on(0);
+        key_value_msg("btn_up", NULL, 0);
+    }
+    else if (ret == btn_double_click)
+    {
+        key_value_msg("sys_home", NULL, 0);
+    }
+    else if (ret == btn_long_press)
+    {
+        key_value_msg("btn_long", NULL, 0);
+    }
+    else if (ret == btn_click)
+    {
+        key_value_msg("btn_click", NULL, 0);
     }
 }
 

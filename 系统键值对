@@ -33,6 +33,8 @@
 #       */
 #      int key_value_del(key_value_handle_t handle);
 
+#########################################################################################
+#  以下为用户自行发布的键
 
 #  功能					    键名			    值			            类型宽度
 
@@ -50,8 +52,6 @@
 #  设置电池低电量报警阈值:	    "sys_set_bat"		 1-30			        uint8_t
 #  获取电池信息:				"sys_get_bat"		电池信息结构体		     cw2015_bat_info_t	
 
-#  订阅按键事件:				"sys_btn"		    按键事件枚举		     btn_event_t
-
 #  设置振动器强度				"sys_set_motor"		0-100			        uint8_t
 #  获取USB连接状态				"sys_usb_sta"		0(无连接)或1(接入USB)	 uint8_t
 #  获取唤醒模式				    "sys_wake_mode"		power_on或wake_up	    system_wake_t
@@ -62,14 +62,20 @@
 #  获取GUI增删权限             "take_gui_key"      NULL                    0
 #  归还GUI增删权限             "give_gui_key"      NULL                    0
 
-#  系统返回HOME手势            "sys_home"          NULL                    0
-#  系统返回手势                "sys_back"          NULL                    0
-#  系统下拉状态栏手势           "sys_status_bar"   NULL                     0
-
 #  获取屏幕操作类型            "tp_type"           0(点击)1(滑动)           uint8_t      
+#  获取屏幕当前触摸状态         "tp_sta"           0(未触摸)1(触摸中)        uint8_t      
+  
 
 #  获取步数                    "mems_get_step"     0-2^32                  uint32_t  (仅可以读到递增值，暂未适配硬件)
 #  获取天气信息                "weather_get"       天气信息结构体            weather_info_t (仅提供数据预览，暂未适配)          
 #  获取海拔高度                "altitude_get"      -32768 - +32767         int16_t 单位m
+
+######################################################################################
+#  以下为系统会达到条件时发布的键，用户可以按需订阅
+#  订阅按键单击事件:			"btn_click"		    NULL		            0
+#  订阅按键长按事件:			"btn_long"		    NULL		            0
+#  订阅按键按下事件:			"btn_down"		    NULL		            0
+#  订阅按键弹起事件:			"btn_up"		    NULL		            0
+#  订阅屏幕双击事件：           "tp_double"         NULL                    0    
 
 

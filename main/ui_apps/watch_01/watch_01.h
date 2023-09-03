@@ -1,6 +1,7 @@
-#ifndef WATCH_01_H
-#define WATCH_01_H
+#pragma once
+
+/**
+ * 表盘1 
+ */
 
 void watch_01_install();
-
-#endif

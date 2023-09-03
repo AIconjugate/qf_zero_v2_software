@@ -74,7 +74,6 @@ void ui_event_muyu(lv_event_t *e)
 
         lv_timer_t *muyu_timer = lv_timer_create(ui_muyu_timer_img, 30, NULL);
         lv_timer_set_repeat_count(muyu_timer, 1);
-        lv_timer_enable(1);
         lv_img_set_zoom(app_img, 256 + 15);
 
         muyu_cnt++;

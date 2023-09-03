@@ -74,12 +74,15 @@ static void del_handle_chek()
 {
     if (del_cnt == 0)
         return;
+
     del_list_t *tmp = del_head;
     del_list_t *move = tmp->next;
     while (del_cnt--)
     {
         deL_handle(tmp->del_handle);
         key_value_free_func(tmp);
+        if (del_cnt == 0)
+            break;
         tmp = move;
         move = move->next;
     }
