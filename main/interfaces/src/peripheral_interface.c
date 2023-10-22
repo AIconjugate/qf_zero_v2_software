@@ -12,9 +12,11 @@ static void btn_tic_task(void *arg)
     }
 }
 
+extern uint8_t get_key_level();
+
 static uint8_t btn_read_level(uint8_t io)
 {
-    return gpio_get_level(io);
+    return gpio_get_level(io) & get_key_level();
 }
 
 static void restart_cb(void *arg)

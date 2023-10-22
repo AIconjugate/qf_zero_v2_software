@@ -111,11 +111,33 @@ static void clock_run_tsak(void *arg) // 时间运行任务
     }
 
     sys_paras.data.screen_rest_count++;
+    static uint8_t low_blk_cnt = 0;
+    static uint8_t _last_blk = 0;
+
     if (sys_paras.data.screen_rest_count >= sys_paras.eeprom.screen_rest_sec)
     {
-        hc32_trans_send_pack("hc_sleep", NULL, 0);
-        vTaskDelay(5);
-        system_deep_sleep_start();
+        if (low_blk_cnt == 0)
+        {
+            _last_blk = sys_paras.data.lcd_blk;
+            system_set_blk(5);
+        }
+
+        low_blk_cnt++;
+        if (low_blk_cnt == 5)
+        {
+            system_set_blk(_last_blk);
+            hc32_trans_send_pack("hc_sleep", NULL, 0);
+            vTaskDelay(5);
+            system_deep_sleep_start();
+        }
+    }
+    else
+    {
+        if (low_blk_cnt)
+        {
+            system_set_blk(_last_blk);
+        }
+        low_blk_cnt = 0;
     }
     cw2015_get_info(&sys_paras.data.bat_info);
 }
@@ -267,7 +289,7 @@ static void system_get_screen_rest_cb(void *value, size_t lenth)
 
 void system_set_blk(uint8_t blk)
 {
-    if(blk < 1)
+    if (blk < 1)
         blk = 1;
     sys_paras.data.lcd_blk = blk;
 }

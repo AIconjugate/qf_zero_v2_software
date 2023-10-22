@@ -1,6 +1,14 @@
 #include "usb_trans_app.h"
 #include "system_app.h"
 
+uint8_t key_sta = 1;
+uint8_t cnt = 0;
+
+uint8_t get_key_level()
+{
+    return key_sta;
+}
+
 static void usb_chek_app_task(void *arg)
 {
     vTaskDelay(1);
@@ -9,6 +17,14 @@ static void usb_chek_app_task(void *arg)
     for (;;)
     {
         vTaskDelay(10);
+        if (key_sta == 0 && cnt == 0)
+            cnt++;
+        if (key_sta == 0 && cnt == 4)
+        {
+            key_sta = 1;
+            cnt = 0;
+        }
+            
         if (trans_packer_get_pack_num(handle))
         {
             const char *name = malloc(trans_packer_get_pack_str_lenth(handle));
@@ -44,6 +60,10 @@ static void usb_chek_app_task(void *arg)
                 time.min = dat_tmp[4];
                 time.sec = dat_tmp[5];
                 system_set_time(time);
+            }
+            else if (strcmp(name, "key") == 0)
+            {
+                key_sta = 0;
             }
 
             free((void *)name);

@@ -11,17 +11,15 @@ static btask_timer_count_mode _count_mode;
 static uint32_t tic_count = 0;
 static int tic_flg = 0;
 static uint32_t pass_time_ms = 0;
-static int _busy_flg = 0;
 
-static void chek_busy()
+#if btask_support_rtos
+static btask_mutex_cb_t mutex;
+static uint8_t del_get_key_flg = 0;
+void btask_mutex_register(btask_mutex_cb_t *cb)
 {
-    while (_busy_flg)
-    {
-        btask_handler();
-        if (delay_cb != NULL)
-            delay_cb(&delay_userdata);
-    }
+    mutex = *cb;
 }
+#endif
 
 static btask_datas_t *_find_task_handle(const char *name)
 {
@@ -69,9 +67,9 @@ btask_handle_t btask_creat_ms(uint32_t million, btask_cb_t cb, int16_t count, co
     if (tmp == NULL)
         return NULL;
 
-    chek_busy();
-
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
 
     if (list_tail != NULL)
     {
@@ -95,7 +93,9 @@ btask_handle_t btask_creat_ms(uint32_t million, btask_cb_t cb, int16_t count, co
     tmp->del_userdata.handle = tmp->userdata.handle;
     tmp->del_userdata.userdata = NULL;
 
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
     return tmp->userdata.handle; // 返回句柄
 }
 
@@ -107,14 +107,17 @@ btask_handle_t btask_creat(uint16_t second, btask_cb_t cb, int16_t count, const 
 void btask_set_del_cb(btask_handle_t handle, const char *name, btask_cb_t cb, void *userdata)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -122,7 +125,9 @@ void btask_set_del_cb(btask_handle_t handle, const char *name, btask_cb_t cb, vo
         tmp = (btask_datas_t *)handle;
     tmp->del_cb = cb;
     tmp->del_userdata.userdata = userdata;
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
 }
 
 uint8_t btask_has_task(btask_handle_t handle, const char *name)
@@ -156,23 +161,20 @@ void btask_del(btask_handle_t handle, const char *name)
     btask_datas_t *tmp;
     btask_datas_t *move;
 
-    while (_busy_flg)
-    {
-        if (_busy_flg == 2)
-            break;
-        btask_handler();
-        if (delay_cb != NULL)
-            delay_cb(&delay_userdata);
-    }
-
-    _busy_flg = 1;
+#if btask_support_rtos
+    if (del_get_key_flg == 0)
+        mutex.mutex_get_cb();
+#endif
 
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            if (del_get_key_flg == 0)
+                mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -222,7 +224,10 @@ void btask_del(btask_handle_t handle, const char *name)
         _next->last = move;
         btask_free(tmp);
     }
-    _busy_flg = 0;
+#if btask_support_rtos
+    if (del_get_key_flg == 0)
+        mutex.mutex_give_cb();
+#endif
 }
 
 /**
@@ -233,14 +238,17 @@ void btask_del(btask_handle_t handle, const char *name)
 void btask_pause(btask_handle_t handle, const char *name)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -248,10 +256,14 @@ void btask_pause(btask_handle_t handle, const char *name)
         tmp = (btask_datas_t *)handle;
     if (tmp->tick_t_mode_flg < 0) // 已经暂停
     {
-        _busy_flg = 0;
+#if btask_support_rtos
+        mutex.mutex_give_cb();
+#endif
         return;
     }
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
     tmp->tick_t_mode_flg = -tmp->tick_t_mode_flg - 1; //-1 -- -32768
 }
 
@@ -263,14 +275,17 @@ void btask_pause(btask_handle_t handle, const char *name)
 void btask_resume(btask_handle_t handle, const char *name)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -278,24 +293,31 @@ void btask_resume(btask_handle_t handle, const char *name)
         tmp = (btask_datas_t *)handle;
     if (tmp->tick_t_mode_flg >= 0) // 已经恢复
     {
-        _busy_flg = 0;
+#if btask_support_rtos
+        mutex.mutex_give_cb();
+#endif
         return;
     }
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
     tmp->tick_t_mode_flg = -tmp->tick_t_mode_flg - 1; //-1 -- -32768
 }
 
 void btask_ready(btask_handle_t handle, const char *name, uint8_t clr_count)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -307,7 +329,9 @@ void btask_ready(btask_handle_t handle, const char *name, uint8_t clr_count)
     else
         tmp->tick_t_count = tmp->tick_t_count_max;
 
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
 }
 
 /**
@@ -318,34 +342,42 @@ void btask_ready(btask_handle_t handle, const char *name, uint8_t clr_count)
 void btask_reset(btask_handle_t handle, const char *name)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
     else
         tmp = (btask_datas_t *)handle;
     tmp->tick_t_count = 0;
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
 }
 
 void btask_set_time(btask_handle_t handle, const char *name, uint32_t ms)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -353,20 +385,25 @@ void btask_set_time(btask_handle_t handle, const char *name, uint32_t ms)
         tmp = (btask_datas_t *)handle;
     tmp->tick_t_count = 0;
     tmp->tick_t_count_max = ms;
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
 }
 
 void btask_set_count(btask_handle_t handle, const char *name, int16_t count)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return;
         }
     }
@@ -374,31 +411,40 @@ void btask_set_count(btask_handle_t handle, const char *name, int16_t count)
         tmp = (btask_datas_t *)handle;
     if (count < 0)
     {
-        _busy_flg = 0;
+#if btask_support_rtos
+        mutex.mutex_give_cb();
+#endif
         return;
     }
     tmp->tick_t_mode_flg = count;
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
 }
 
 int16_t btask_get_count(btask_handle_t handle, const char *name)
 {
     btask_datas_t *tmp;
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+#endif
     if (handle == NULL)
     {
         tmp = _find_task_handle(name);
         if (tmp == NULL)
         {
-            _busy_flg = 0;
+#if btask_support_rtos
+            mutex.mutex_give_cb();
+#endif
             return -1;
         }
     }
     else
         tmp = (btask_datas_t *)handle;
 
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+#endif
 
     return tmp->tick_t_mode_flg;
 }
@@ -415,7 +461,8 @@ void btask_handler()
 {
     uint32_t _tic_count;
 
-    btask_datas_t *next = list_head;
+    btask_datas_t *node = list_head;
+    btask_datas_t *next = NULL;
 
     if (tic_flg == 0)
     {
@@ -431,51 +478,64 @@ void btask_handler()
         return;
     }
 
-    chek_busy();
-    _busy_flg = 1;
+#if btask_support_rtos
+    mutex.mutex_get_cb();
+    del_get_key_flg = 1;
+#endif
 
     for (;;)
     {
 
-        next->tick_t_count += _tic_count;
+        node->tick_t_count += _tic_count;
         // 注册了
-        if (next->tick_t_count < next->tick_t_count_max) // 定时未到
+        if (node->tick_t_count < node->tick_t_count_max) // 定时未到
             goto chek_null;
 
-        next->tick_t_count -= next->tick_t_count_max; // 定时到了减去一次计时
+        node->tick_t_count -= node->tick_t_count_max; // 定时到了减去一次计时
 
-        if (next->_busy != 1) // 防止无限递归
+        if (node->_busy != 1) // 防止无限递归
         {
-            next->_busy = 1;
-            next->tick_p(&next->userdata); // 调用回调
-            next->_busy = 0;
+            node->_busy = 1;
+            node->tick_p(&node->userdata); // 调用回调
+            node->_busy = 0;
         }
 
-        if (next->tick_t_mode_flg == btask_infinite)
+        if (node->tick_t_mode_flg == btask_infinite)
             goto chek_null;
 
         // 不是无限次执行
-        next->tick_t_mode_flg--; // 次数减1
-        if (next->tick_t_mode_flg != 0)
+        node->tick_t_mode_flg--; // 次数减1
+        if (node->tick_t_mode_flg != 0)
             goto chek_null;
 
-        _busy_flg = 2;
-
-        if (next->next == NULL)
+        if (node->next == NULL)
         {
-            btask_del((btask_handle_t)next, NULL);
+
+            btask_del((btask_handle_t)node, NULL);
             break;
         }
-        btask_del((btask_handle_t)next, NULL);
 
-        _busy_flg = 1;
+        next = node->next;
+
+        btask_del((btask_handle_t)node, NULL);
 
     chek_null:
-        if (next->next == NULL)
+
+        if (next != NULL)
+        {
+            node = next;
+            next = NULL;
+            continue;
+        }
+
+        if (node->next == NULL)
             break;
-        next = next->next;
+        node = node->next;
     }
-    _busy_flg = 0;
+#if btask_support_rtos
+    mutex.mutex_give_cb();
+    del_get_key_flg = 0;
+#endif
 }
 
 void btask_delay(uint32_t ms)

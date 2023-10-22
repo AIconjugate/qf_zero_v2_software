@@ -71,7 +71,6 @@ static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
                     tmp = 1;
                 }
 
-                printf("t:%d\n", esp_log_timestamp() - start_t);
                 if ((esp_log_timestamp() - start_t) <= 300)
                 {
                     key_value_msg("tp_double", NULL, 0);

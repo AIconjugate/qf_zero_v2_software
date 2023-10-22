@@ -9,7 +9,13 @@ extern "C"
     /*
         Chinese is encoded in Unicode. If it is garbled, please change the encoding method of the editor.
         简单键值对数据交互库 By启凡科创
-        version:v1.0.1  2023-9-3
+        version:v1.0.2  2023-10-21
+
+        注意：不同API内，如msg触发的回调函数内不能调用del，可以利用创建定时任务在指定时间后再del，同时独立调用是允许的，不能嵌套！！！
+            同时，msg原理上支持msg的回调函数里再msg实现递归，但是原则上不能这么做，可能会导致宕机
+
+        1.0.2:
+            支持RTOS添加线程锁，防止宕机
 
         1.0.1:
             修复删除句柄指针跑飞问题
@@ -25,6 +31,9 @@ extern "C"
 #define key_value_malloc_func(x) malloc(x)
 #define key_value_free_func(x) free(x)
 
+// 是（1）否（0）支持多线程访问,开启后在使用任意API前必须使用key_value_mutex_register注册线程锁（仅第一次）
+#define key_value_support_rtos 1
+
 #if key_value_transation_compile_en
 
     typedef void (*key_value_cb_t)(void *value, size_t lenth);
@@ -36,10 +45,26 @@ extern "C"
         struct _key_value_register_t *next;
         struct _key_value_register_t *last;
         int key_sum;
-        uint8_t del_flg;
     } key_value_register_t;
 
+#if key_value_support_rtos
+    typedef struct
+    {
+        void (*mutex_get_cb)();
+        void (*mutex_give_cb)();
+    } key_value_mutex_cb_t;
+#endif
+
     typedef key_value_register_t *key_value_handle_t;
+
+#if key_value_support_rtos
+    /**
+     * @brief 注册线程锁回调函数
+     *
+     * @param cb 获取，归还钥匙的回调函数
+     */
+    void key_value_mutex_register(key_value_mutex_cb_t *cb);
+#endif
 
     /**
      * @brief 注册(订阅)有指定键时的回调函数

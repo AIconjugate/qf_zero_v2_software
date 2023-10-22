@@ -36,8 +36,16 @@ extern "C"
 
         一些小细节：
             使用句柄管理任务：效率相对于使用字符串管理效率更高，但是跨文件管理任务需要传递句柄，不跨文件时推荐使用句柄进行管理
+            注意：任务回调函数内不能调用删除任务！！
+            同时，不支持任务的回调函数里再调用任务函数递归，调用将无效
 
-        version:v1.0.1  2023-6-20
+        version:
+
+        v1.0.2  2023-10-22 
+        更改支持RTOS多线程的方式，需使用回调函数注册
+        修复删除任务可能会导致死机的问题
+
+        v1.0.1  2023-6-20
     */
 
     // #include "LIB_CONFIG.h" //移植删除
@@ -56,6 +64,9 @@ extern "C"
 #define btask_malloc(x) malloc(x) // 申请内存函数
 #define btask_free(x) free(x)     // 释放内存函数
 
+// 是（1）否（0）支持多线程访问,开启后在使用任意API前必须使用btask_mutex_register注册线程锁（仅第一次）
+#define btask_support_rtos 1
+
 #if btask_compile_en
 
     typedef const void *btask_handle_t;
@@ -68,6 +79,14 @@ extern "C"
         btask_handle_t handle; // 指向定时器句柄
         void *userdata;        // 用户数据
     } btask_event_t;
+
+#if btask_support_rtos
+    typedef struct
+    {
+        void (*mutex_get_cb)();
+        void (*mutex_give_cb)();
+    } btask_mutex_cb_t;
+#endif
 
     typedef void (*btask_cb_t)(btask_event_t *e); // 回调函数格式类型
 
@@ -100,6 +119,15 @@ extern "C"
         btask_none = -1,
         btask_infinite = 0, // 无限次数
     };
+
+#if btask_support_rtos
+    /**
+     * @brief 注册线程锁回调函数
+     *
+     * @param cb 获取，归还钥匙的回调函数
+     */
+    void btask_mutex_register(btask_mutex_cb_t *cb);
+#endif
 
     /**
      * @brief 注册在延时阻塞delay时的循环回调函数，如将喂狗等操作绑定防止阻塞导致重启

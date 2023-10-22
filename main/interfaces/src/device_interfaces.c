@@ -11,6 +11,28 @@
 /*************************************************************************************************************/
 
 static TaskHandle_t btask_handle = NULL;
+static SemaphoreHandle_t key_value_mutex_handle = NULL;
+static SemaphoreHandle_t beat_task_mutex_handle = NULL;
+
+static void key_value_take_key()
+{
+    xSemaphoreTake(key_value_mutex_handle, portMAX_DELAY);
+}
+
+static void key_value_give_key()
+{
+    xSemaphoreGive(key_value_mutex_handle);
+}
+
+static void btask_take_key()
+{
+    xSemaphoreTake(beat_task_mutex_handle, portMAX_DELAY);
+}
+
+static void btask_give_key()
+{
+    xSemaphoreGive(beat_task_mutex_handle);
+}
 
 static void timer_1ms_tic(void *arg)
 {
@@ -45,11 +67,24 @@ static void wait_hc32_ready()
     cfg.mode = GPIO_MODE_OUTPUT;
     gpio_config(&cfg);
 
-    gpio_set_level(ESP_STA_IO, 0);//拉低状态  ESP上线
+    gpio_set_level(ESP_STA_IO, 0); // 拉低状态  ESP上线
 }
 
 void device_interface_init()
 {
+    key_value_mutex_handle = xSemaphoreCreateMutex();
+    beat_task_mutex_handle = xSemaphoreCreateMutex();
+
+    key_value_mutex_cb_t cfg = {
+        .mutex_get_cb = key_value_take_key,
+        .mutex_give_cb = key_value_give_key};
+    key_value_mutex_register(&cfg);
+
+    btask_mutex_cb_t cfg2 = {
+        .mutex_get_cb = btask_take_key,
+        .mutex_give_cb = btask_give_key};
+    btask_mutex_register(&cfg2);
+
     wait_hc32_ready();                            // 等待副处理器上线
     hc32_trans_init();                            // 初始化协处理器通信接口
     usb_trans_init();                             // 初始化USB通信串口

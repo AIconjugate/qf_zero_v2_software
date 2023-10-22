@@ -8,6 +8,7 @@
 #include "pop_cat_app.h"
 #include "clock_app.h"
 #include "setting_app.h"
+#include "yuanshen_app.h"
 
 #include "watch_01.h"
 
@@ -19,10 +20,11 @@ void app_startup_list() // APP初始化列表
     mems_app_install();        // 六轴数据app
 
     // 有UI交互APP
-    test_app_install();    // 测试APP
-    muyu_app_install();    // 电子木鱼APP
-    pop_cat_app_install(); // pop猫APP
-    clock_app_install();   // 时钟APP
+    test_app_install();     // 测试APP
+    muyu_app_install();     // 电子木鱼APP
+    pop_cat_app_install();  // pop猫APP
+    clock_app_install();    // 时钟APP
+    yuanshen_app_install(); // 原神启动器
 
     setting_app_install(); // 设置APP
 }

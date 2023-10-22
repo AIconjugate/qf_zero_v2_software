@@ -29,9 +29,9 @@ typedef enum
 
 typedef struct
 {
-    uint8_t sta : 1;
-    uint8_t change_flg : 1;
-    uint8_t set_flg : 1;
+    uint8_t sta : 1;        // 是否开启修改
+    uint8_t change_flg : 1; // 状态更改标志
+    uint8_t use_en : 1;
 } blk_sta_t;
 
 static blk_sta_t blk;
@@ -41,16 +41,15 @@ static lv_timer_t *btn_timer = NULL;
 static void gestrue_cb(lv_event_t *e);
 static void desktop_load();
 
-static void tp_double_cb(void *value, size_t lenth)
+static void tp_double_cb(void *value, size_t lenth) // 有双击
 {
-    blk.change_flg = 1;
-    blk.sta = 1;
-    blk.set_flg = 1;
+    blk.change_flg = 1; // 状态改变
+    blk.sta = 1;        // 开启亮度修改
 }
 
-static void scr_pressed_cb(lv_event_t *e)
+static void scr_pressed_cb(lv_event_t *e) // 点击空白处
 {
-    blk.change_flg = 1;
+    blk.change_flg = 1; // 状态改变
     blk.sta = 0;
 }
 
@@ -62,25 +61,28 @@ static void set_blk_slider_cb(lv_event_t *e)
 
 static void btn_timer_cb(lv_timer_t *e)
 {
-
-    if (blk.change_flg == 0)
+    if (blk.change_flg == 0) // 状态未改变
         return;
-    blk.change_flg = 0;
+    blk.change_flg = 0; // 状态改变
+
+    if (blk.use_en == 0)
+        return;
 
     static lv_obj_t *slider = NULL;
 
-    if (blk.sta == 1)
+    if (blk.sta == 1) // 开始编辑
     {
         if (slider != NULL)
             return;
 
         slider = lv_slider_create(lv_scr_act());
-        lv_obj_set_size(slider, 200, 100);
+        lv_obj_set_size(slider, 180, 100);
         lv_obj_center(slider);
         lv_obj_remove_style(slider, NULL, LV_PART_KNOB);
         lv_obj_set_style_bg_color(slider, lv_color_hex(0x3B3B3B), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(slider, 255, LV_PART_MAIN);
         lv_obj_set_style_bg_color(slider, lv_color_hex(0xffffff), LV_PART_INDICATOR);
+        lv_obj_set_style_radius(slider,20,LV_PART_INDICATOR);
         lv_slider_set_range(slider, 1, 100);
         uint8_t tmp = 0;
         key_value_msg("sys_get_blk", &tmp, 1);
@@ -98,13 +100,12 @@ static void btn_timer_cb(lv_timer_t *e)
 
     lv_obj_del(slider);
     slider = NULL;
-    blk.set_flg = 0;
 }
 
 static void load_end_cb(lv_event_t *e)
 {
     blk.change_flg = 0;
-    blk.set_flg = 0;
+    blk.use_en = 1;
     key_value_register(&tp_double_handle, "tp_double", tp_double_cb);
     btn_timer = lv_timer_create(btn_timer_cb, 20, NULL);
     lv_timer_set_repeat_count(btn_timer, -1);
@@ -122,6 +123,10 @@ static desktop_watch_list_t *get_watch(size_t id)
 
 static void watch_switch(watch_switch_t type)
 {
+
+    if (blk.sta)
+        return;
+
     printf("switch\n");
 
     if (type == watch_last)
@@ -172,6 +177,8 @@ static void gestrue_cb(lv_event_t *e)
     case LV_DIR_TOP:
         if (lv_scr_act() == main_page)
         {
+            blk.use_en = 0;
+
             lv_scr_load_anim(memu_cont, LV_SCR_LOAD_ANIM_MOVE_TOP, 100, 0, 0);
         }
 

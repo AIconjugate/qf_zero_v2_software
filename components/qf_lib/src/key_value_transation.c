@@ -2,22 +2,18 @@
 
 #if key_value_transation_compile_en
 
-typedef struct _del_list
-{
-    key_value_handle_t del_handle;
-    struct _del_list *next;
-} del_list_t;
-
 static key_value_register_t *register_head = NULL;
 static key_value_register_t *register_tail = NULL;
-static uint8_t _busy = 0;
-
-static del_list_t *del_head = NULL;
-static del_list_t *del_tail = NULL;
-static size_t del_cnt = 0;
-static uint8_t _busy_del = 0;
 
 static key_value_register_t *chek_has_register(key_value_handle_t handle);
+
+#if key_value_support_rtos
+static key_value_mutex_cb_t mutex_cb;
+void key_value_mutex_register(key_value_mutex_cb_t *cb)
+{
+    mutex_cb = *cb;
+}
+#endif
 
 static int key_cmp(const char *key1, const char *key2)
 {
@@ -37,58 +33,6 @@ static int get_key_sum(const char *key)
         sum += key[i];
     }
     return sum;
-}
-
-static void deL_handle(key_value_handle_t handle)
-{
-    key_value_register_t *tmp = chek_has_register(handle);
-    if (tmp == NULL)
-        return;
-
-    if (tmp == register_head)
-    {
-        if (register_head == register_tail)
-        {
-            register_head = NULL;
-            register_tail = NULL;
-        }
-        else
-            register_head = register_head->next;
-    }
-    else if (tmp == register_tail)
-    {
-        register_tail = tmp->last;
-        register_tail->next = NULL;
-    }
-    else
-    {
-        key_value_register_t *last = tmp->last;
-        last->next = tmp->next;
-    }
-
-    key_value_free_func((void *)tmp->key);
-    key_value_free_func(tmp);
-}
-
-static void del_handle_chek()
-{
-    if (del_cnt == 0)
-        return;
-
-    del_list_t *tmp = del_head;
-    del_list_t *move = tmp->next;
-    while (del_cnt--)
-    {
-        deL_handle(tmp->del_handle);
-        key_value_free_func(tmp);
-        if (del_cnt == 0)
-            break;
-        tmp = move;
-        move = move->next;
-    }
-
-    del_head = NULL;
-    del_tail = NULL;
 }
 
 static key_value_register_t *chek_has_register(key_value_handle_t handle)
@@ -112,22 +56,69 @@ static key_value_register_t *chek_has_register(key_value_handle_t handle)
     }
 }
 
+/**
+ * @brief 删除节点
+ *
+ * @param handle 句柄
+ * @return int 0：成功，1：失败
+ *  */
+static int deL_handle(key_value_handle_t handle)
+{
+    key_value_register_t *tmp = chek_has_register(handle);
+    if (tmp == NULL)
+        return 1;
+
+    if (tmp == register_head)
+    {
+        if (register_head == register_tail)
+        {
+            register_head = NULL;
+            register_tail = NULL;
+        }
+        else
+            register_head = register_head->next;
+    }
+    else if (tmp == register_tail)
+    {
+        register_tail = tmp->last;
+        register_tail->next = NULL;
+    }
+    else
+    {
+        key_value_register_t *last = tmp->last;
+        key_value_register_t *next = tmp->next;
+        last->next = next;
+        next->last = last;
+    }
+
+    key_value_free_func((void *)tmp->key);
+    key_value_free_func(tmp);
+
+    return 0;
+}
+
 int key_value_msg(const char *key, void *value, size_t lenth)
 {
     int ret = 2;
     int sum = 0;
 
-    while (_busy)
-        ;
-    _busy = 1;
-
-    del_handle_chek();
+#if key_value_support_rtos
+    static uint8_t busy = 0;
+    if (busy == 0)
+        mutex_cb.mutex_get_cb();
+    busy++;
+#endif
 
     key_value_register_t *move = register_head;
 
     if (move == NULL)
     {
-        _busy = 0;
+#if key_value_support_rtos
+        busy--;
+        if (busy == 0)
+            mutex_cb.mutex_give_cb();
+
+#endif
         return 1;
     }
 
@@ -143,22 +134,31 @@ int key_value_msg(const char *key, void *value, size_t lenth)
         if (key_cmp(key, move->key) == 0)
         {
             move->_cb(value, lenth);
-            ret = 0;
+            ret--;
             break;
         }
 
     chek_null:
+
         if (move->next == NULL)
         {
-            _busy = 0;
+#if key_value_support_rtos
+            busy--;
+            if (busy == 0)
+                mutex_cb.mutex_give_cb();
+#endif
             return ret;
         }
 
         move = move->next;
     }
 
-    del_handle_chek();
-    _busy = 0;
+#if key_value_support_rtos
+    busy--;
+    if (busy == 0)
+        mutex_cb.mutex_give_cb();
+#endif
+
     return ret;
 }
 
@@ -184,9 +184,9 @@ int key_value_register(key_value_handle_t *handle, const char *key, key_value_cb
     tmp->last = NULL;
     tmp->_cb = cb;
 
-    while (_busy)
-        ;
-    _busy = 1;
+#if key_value_support_rtos
+    mutex_cb.mutex_get_cb();
+#endif
 
     if (handle != NULL)
         *handle = tmp;
@@ -203,31 +203,27 @@ int key_value_register(key_value_handle_t *handle, const char *key, key_value_cb
         register_tail = tmp;
     }
 
-    _busy = 0;
+#if key_value_support_rtos
+    mutex_cb.mutex_give_cb();
+#endif
+
     return 0;
 }
 
 int key_value_del(key_value_handle_t handle)
 {
-    while (_busy_del)
-        ;
-    _busy_del = 1;
-    del_list_t *tmp = key_value_malloc_func(sizeof(del_list_t));
-    if (tmp == NULL)
-        return 1;
-    tmp->del_handle = handle;
-    tmp->next = NULL;
 
-    if (del_tail != NULL)
-        del_tail->next = tmp;
-    if (del_head == NULL)
-        del_head = tmp;
-    del_tail = tmp;
-    del_cnt++;
+#if key_value_support_rtos
+    mutex_cb.mutex_get_cb();
+#endif
 
-    _busy_del = 0;
+    int ret = deL_handle(handle);
 
-    return 0;
+#if key_value_support_rtos
+    mutex_cb.mutex_give_cb();
+#endif
+
+    return ret;
 }
 
 #endif

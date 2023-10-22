@@ -71,7 +71,7 @@ void lv_interface_init()
     lv_init(); // 初始化LVGL
 
     lv_color_t *buf1 = heap_caps_malloc(LVGL_BUFFER_SIZE * sizeof(lv_color_t), LCD_BUFFER_USE); // 申请buffer
-    lv_color_t *buf2 = heap_caps_malloc(LVGL_BUFFER_SIZE * sizeof(lv_color_t), LCD_BUFFER_USE);//
+    lv_color_t *buf2 = heap_caps_malloc(LVGL_BUFFER_SIZE * sizeof(lv_color_t), LCD_BUFFER_USE); //
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LVGL_BUFFER_SIZE);
 

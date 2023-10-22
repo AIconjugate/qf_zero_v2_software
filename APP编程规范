@@ -3,6 +3,9 @@
 
 #  具体简单格式可参照test_app实现和仔细阅读app_manage.h相关说明
 #  
+#  系统官方APP使用OPPO字体，字体文件放置于开源工程根目录
+#  APP的图标ICON最佳尺寸：38*38
+#  APP的名称字体最大大小：24*24
 #  
 #  APP界面加载统一使用LVGL的lv_scr_load（无动画加载）或lv_scr_load_anim（可选动画加载）
 #  若使用lv_scr_load_anim加载函数的最后一个参数必须填false(0),删除桌面对象将导致宕机
