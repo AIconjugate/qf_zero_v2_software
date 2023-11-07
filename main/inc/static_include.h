@@ -48,6 +48,7 @@
 #include "key_value_transation.h"
 #include "app_manage.h"
 #include "fast_lib.h"
+#include "QMC5883L.h"
 
 
 #endif

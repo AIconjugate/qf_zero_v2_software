@@ -1,4 +1,4 @@
-#include "atmospheric_app.h"
+#include "mems_app.h"
 
 static uint32_t step = 0;
 

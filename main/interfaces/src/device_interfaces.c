@@ -75,10 +75,12 @@ void device_interface_init()
     key_value_mutex_handle = xSemaphoreCreateMutex();
     beat_task_mutex_handle = xSemaphoreCreateMutex();
 
+#if key_value_support_rtos
     key_value_mutex_cb_t cfg = {
         .mutex_get_cb = key_value_take_key,
         .mutex_give_cb = key_value_give_key};
     key_value_mutex_register(&cfg);
+#endif
 
     btask_mutex_cb_t cfg2 = {
         .mutex_get_cb = btask_take_key,

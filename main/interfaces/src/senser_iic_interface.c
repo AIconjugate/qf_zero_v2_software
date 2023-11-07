@@ -50,5 +50,10 @@ esp_err_t senser_iic_init()
     cb.iic_write_bytes = senser_iic_write_bytes;
     cw2015_attach_trans_cb(&cb); // 注册电量计通信接口
 
+    qmc5883l_trans_cb_t cfg = {
+        .read_bytes = senser_iic_read_bytes,
+        .write_byte = senser_iic_write_byte};
+    qmc5883l_attach_trans_cb(&cfg);
+
     return ESP_OK;
 }

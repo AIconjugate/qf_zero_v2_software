@@ -80,7 +80,7 @@ extern "C"
      * @brief 删除已注册的键
      *
      * @param handle 注册的句柄
-     * @return int 0：成功，1：不存在句柄
+     * @return int 0：成功，1：不存在句柄,2:空间不足
      */
     int key_value_del(key_value_handle_t handle);
 
@@ -90,7 +90,7 @@ extern "C"
      * @param key 键名，可以是动态的
      * @param value 指向数据，可以是动态的
      * @param lenth 数据长度，字节
-     * @return int 0：成功，1：无注册键，2：无指定键
+     * @return int 0：成功，1：无注册键
      */
     int key_value_msg(const char *key, void *value, size_t lenth);
 

@@ -76,7 +76,11 @@
         "spi_common.h": "c",
         "pop_cat_app.h": "c",
         "atmospheric_app.h": "c",
-        "btn_event_app.h": "c"
+        "btn_event_app.h": "c",
+        "bmp280.h": "c",
+        "cmath": "c",
+        "math.h": "c",
+        "qmc5883l_app.h": "c"
     },
     "cmake.configureOnOpen": false
 }
