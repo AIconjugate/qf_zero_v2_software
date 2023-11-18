@@ -55,13 +55,13 @@ static lv_anim_t *sec_anim = NULL;
 static lv_anim_t *sec_run_anim = NULL;
 static lv_anim_t *min_anim = NULL;
 static lv_anim_t *hour_anim = NULL;
+static uint8_t data_ref_flg = 2;
 ////////////////////////////////////
 
 static void _ui_anim_callback_set_image_angle(lv_anim_t *a, int32_t v)
 {
     lv_img_set_angle((lv_obj_t *)a->user_data, v);
 }
-
 static int32_t _ui_anim_callback_get_image_angle(lv_anim_t *a)
 {
     return lv_img_get_angle((lv_obj_t *)a->user_data);
@@ -69,15 +69,15 @@ static int32_t _ui_anim_callback_get_image_angle(lv_anim_t *a)
 
 static void scr_load_cb(lv_event_t *e)
 {
+    data_ref_flg++;
+    lv_timer_resume(data_ref_timer);
     if (anim_flg == anim_over)
         anim_flg = anim_ready;
-    lv_timer_resume(data_ref_timer);
 }
 
 static void scr_unload_cb(lv_event_t *e)
 {
     lv_timer_pause(data_ref_timer);
-
     if (sec_anim != NULL)
     {
         lv_anim_del(sec_anim, NULL);
@@ -146,7 +146,7 @@ static void _ref_bat()
     cw2015_bat_info_t bat_info;
     key_value_msg("sys_get_bat", &bat_info, sizeof(bat_info));
 
-    if (last_soc == bat_info.soc)
+    if (last_soc == bat_info.soc && data_ref_flg == 0)
         return;
 
     last_soc = bat_info.soc;
@@ -169,15 +169,8 @@ static void _ref_day_time()
 
     static clock_time_t last_time = {0, 0, 0, 0, 0, 0, 0};
 
-    if (memcmp(&time, &last_time, sizeof(last_time)) == 0)
+    if (memcmp(&time, &last_time, sizeof(last_time)) == 0 && data_ref_flg == 0)
         return;
-
-    static uint8_t power_on_flg = 1;
-    if (power_on_flg == 1 && data_ref_timer != NULL)
-    {
-        power_on_flg = 0;
-        lv_timer_set_period(data_ref_timer, 500);
-    }
 
     if (anim_flg == anim_ready)
     {
@@ -233,7 +226,7 @@ static void _ref_day_time()
         hour_anim = lv_anim_start(&PropertyAnimation_0);
     }
 
-    if (time.month != last_time.month || time.day != last_time.day)
+    if ((time.month != last_time.month || time.day != last_time.day) || data_ref_flg)
     {
 
         last_time.month = time.month;
@@ -241,7 +234,7 @@ static void _ref_day_time()
         lv_label_set_text_fmt(ref_objs->label_day, "%d/%d", last_time.month, last_time.day);
     }
 
-    if (time.week != last_time.week)
+    if (time.week != last_time.week || data_ref_flg)
     {
         last_time.week = time.week;
         uint16_t angle;
@@ -252,7 +245,7 @@ static void _ref_day_time()
         lv_img_set_angle(ref_objs->img_week, angle);
     }
 
-    if (time.hour != last_time.hour)
+    if (time.hour != last_time.hour || data_ref_flg)
     {
         last_time.hour = time.hour;
         uint8_t dat[2] = {time.hour / 10, time.hour % 10};
@@ -262,7 +255,7 @@ static void _ref_day_time()
         }
     }
 
-    if (time.min != last_time.min)
+    if (time.min != last_time.min || data_ref_flg)
     {
         last_time.min = time.min;
         uint8_t dat[2] = {time.min / 10, time.min % 10};
@@ -279,7 +272,7 @@ static void _ref_day_time()
         }
     }
 
-    if (time.sec != last_time.sec)
+    if (time.sec != last_time.sec || data_ref_flg)
     {
         last_time.sec = time.sec;
         if (lv_obj_has_flag(ref_objs->img_time[4], LV_OBJ_FLAG_HIDDEN))
@@ -302,7 +295,7 @@ static void _ref_step()
 
     key_value_msg("mems_get_step", &step, sizeof(uint32_t));
 
-    if (last_step == step)
+    if (last_step == step && data_ref_flg == 0)
         return;
     last_step = step;
 
@@ -322,13 +315,13 @@ static void _ref_weather()
     weather_info_t weather;
     key_value_msg("weather_get", &weather, sizeof(weather));
 
-    if (weather.icon != last_weather.icon)
+    if (weather.icon != last_weather.icon || data_ref_flg)
     {
         last_weather.icon = weather.icon;
         lv_img_set_offset_y(ref_objs->img_wea_icon, (-last_weather.icon) * 25);
     }
 
-    if (weather.low_temp == last_weather.low_temp && weather.high_temp == last_weather.high_temp)
+    if (weather.low_temp == last_weather.low_temp && weather.high_temp == last_weather.high_temp && data_ref_flg == 0)
         return;
 
     last_weather.low_temp = weather.low_temp;
@@ -344,7 +337,7 @@ static void _ref_altitude()
 
     key_value_msg("altitude_get", &altitude, sizeof(altitude));
 
-    if (last_altitude == altitude)
+    if (last_altitude == altitude && data_ref_flg == 0)
         return;
     last_altitude = altitude;
 
@@ -358,13 +351,18 @@ static void _scr_info_ref_cb(lv_timer_t *e)
     _ref_step();
     _ref_weather();
     _ref_altitude();
+    if (data_ref_flg)
+    {
+        data_ref_flg--;
+        if (data_ref_flg == 0)
+            lv_timer_set_period(data_ref_timer, 500);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 static lv_obj_t *watch_load() // 表盘加载函数，返回表盘对象
 {
-
     ref_objs = lv_mem_alloc(sizeof(ref_objs_t));
 
     lv_obj_t *scr = lv_obj_create(NULL);
@@ -493,19 +491,16 @@ static lv_obj_t *watch_load() // 表盘加载函数，返回表盘对象
     lv_obj_set_align(ref_objs->img_sec, LV_ALIGN_CENTER);
     lv_img_set_pivot(ref_objs->img_sec, 9, 125 - 32);
 
-    _scr_info_ref_cb(NULL);
-
+    data_ref_flg = 2;
     data_ref_timer = lv_timer_create(_scr_info_ref_cb, 20, NULL);
-    lv_timer_pause(data_ref_timer);
-
+    
     return scr;
 }
 
-static void watch_close() // 正在使用的表盘切换到不使用
+static void watch_close() // 表盘切换到后台函数
 {
     lv_timer_del(data_ref_timer);
     data_ref_timer = NULL;
-
     lv_mem_free(ref_objs);
     ref_objs = NULL;
 }

@@ -263,7 +263,7 @@ static void set_day_cb(lv_event_t *e)
     lv_obj_set_style_bg_color(cont, lv_color_hex(0), 0);
     lv_obj_set_size(cont, LV_HOR_RES, LV_VER_RES);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_add_event_cb(cont, scr_event_cb, LV_EVENT_ALL, NULL);
+    //lv_obj_add_event_cb(cont, scr_event_cb, LV_EVENT_ALL, NULL);
 
     lv_obj_t *btn[6];
     lv_obj_t *label[6];

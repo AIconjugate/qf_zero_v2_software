@@ -1,8 +1,10 @@
 #include "desktop.h"
 #include "system_app.h"
 
+#if !QF_ZERO_V2_DESKTOP_HIDDEN_EN
 LV_IMG_DECLARE(icon_desktop);
 LV_IMG_DECLARE(desktop_img_set_blk);
+#endif
 
 static lv_obj_t *memu_cont = NULL;
 static lv_obj_t *main_page = NULL;
@@ -20,6 +22,7 @@ static desktop_watch_list_t *head = NULL;
 static desktop_watch_list_t *tail = NULL;
 static desktop_watch_list_t *move = NULL;
 static RTC_FAST_ATTR size_t desktop_watch_id_save = 0;
+static size_t watch_cnt = 0;
 
 typedef enum
 {
@@ -82,16 +85,18 @@ static void btn_timer_cb(lv_timer_t *e)
         lv_obj_set_style_bg_color(slider, lv_color_hex(0x3B3B3B), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(slider, 255, LV_PART_MAIN);
         lv_obj_set_style_bg_color(slider, lv_color_hex(0xffffff), LV_PART_INDICATOR);
-        lv_obj_set_style_radius(slider,20,LV_PART_INDICATOR);
+        lv_obj_set_style_radius(slider, 20, LV_PART_INDICATOR);
         lv_slider_set_range(slider, 1, 100);
         uint8_t tmp = 0;
         key_value_msg("sys_get_blk", &tmp, 1);
         lv_slider_set_value(slider, tmp, LV_ANIM_OFF);
         lv_obj_add_event_cb(slider, set_blk_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
+#if !QF_ZERO_V2_DESKTOP_HIDDEN_EN
         lv_obj_t *img = lv_img_create(slider);
         lv_img_set_src(img, &desktop_img_set_blk);
         lv_obj_center(img);
+#endif
         return;
     }
 
@@ -127,19 +132,24 @@ static void watch_switch(watch_switch_t type)
     if (blk.sta)
         return;
 
-    printf("switch\n");
+    if (move == NULL)
+        return;
+
+    void (*close_func)() = move->watch.watch_close;
 
     if (type == watch_last)
     {
         if (move->last == NULL)
             return;
         move = move->last;
-        return;
     }
-    if (move->next == NULL)
-        return;
-    void (*close_func)() = move->watch.watch_close;
-    move = move->next;
+    else
+    {
+        if (move->next == NULL)
+            return;
+        move = move->next;
+    }
+
     main_page = move->watch.watch_load();
     lv_obj_add_event_cb(main_page, load_end_cb, LV_EVENT_SCREEN_LOADED, NULL);
     lv_obj_add_event_cb(main_page, gestrue_cb, LV_EVENT_GESTURE, NULL);
@@ -275,8 +285,10 @@ static void menu_load(void)
     lv_obj_set_scroll_snap_y(memu_cont, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scrollbar_mode(memu_cont, LV_SCROLLBAR_MODE_OFF);
 
-    // lv_obj_set_style_bg_color(memu_cont, lv_color_hex(0), 0);
+// lv_obj_set_style_bg_color(memu_cont, lv_color_hex(0), 0);
+#if !QF_ZERO_V2_DESKTOP_HIDDEN_EN
     lv_obj_set_style_bg_img_src(memu_cont, &desktop_bg_default, LV_PART_MAIN);
+#endif
 
     uint32_t i;
     for (i = 0; i < app_get_cnt() - 1; i++)
@@ -295,8 +307,10 @@ static void menu_load(void)
         lv_obj_t *img = lv_img_create(btn);
         if (app->icon != NULL)
             lv_img_set_src(img, app->icon);
+#if !QF_ZERO_V2_DESKTOP_HIDDEN_EN
         else
             lv_img_set_src(img, &icon_desktop);
+#endif
         lv_obj_align(img, LV_ALIGN_LEFT_MID, 3, 0);
 
         lv_obj_t *label = lv_label_create(btn);
@@ -322,8 +336,15 @@ static void menu_load(void)
 static void desktop_init()
 {
     desktop_watch_list();
-    move = get_watch(desktop_watch_id_save);
-    main_page = move->watch.watch_load();
+    if (watch_cnt == 0)
+    {
+        main_page = lv_obj_create(NULL);
+    }
+    else
+    {
+        move = get_watch(desktop_watch_id_save);
+        main_page = move->watch.watch_load();
+    }
     lv_obj_add_event_cb(main_page, load_end_cb, LV_EVENT_SCREEN_LOADED, NULL);
     lv_obj_add_event_cb(main_page, gestrue_cb, LV_EVENT_GESTURE, NULL);
     lv_obj_add_event_cb(main_page, scr_pressed_cb, LV_EVENT_PRESSED, NULL);
@@ -361,6 +382,8 @@ static void desktop_close()
 
 static void desktop_kill()
 {
+    if (move == NULL)
+        return;
     desktop_watch_id_save = move->watch_id;
     printf("desktop kill\n");
 }
@@ -384,9 +407,14 @@ void desktop_app_install()
         .app_load = desktop_load,
         .app_power_off = desktop_power_off,
         .has_gui = 1,
+#if QF_ZERO_V2_DESKTOP_HIDDEN_EN
+        .icon = NULL,
+#else
         .icon = &icon_desktop,
+#endif
         .name = "desktop",
-        .name_font = NULL};
+        .name_font = NULL
+    };
     desktop_id = app_install(&cfg);
 }
 
@@ -395,11 +423,14 @@ void desktop_add_watch(desktop_watch_t *watch)
     desktop_watch_list_t *tmp = malloc(sizeof(desktop_watch_list_t));
     if (tmp == NULL)
         return;
-    static size_t cnt_id = 0;
     tmp->watch = *watch;
     tmp->next = NULL;
     tmp->last = tail;
-    tmp->watch_id = cnt_id++;
+    tmp->watch_id = watch_cnt++;
+    if (tail != NULL)
+    {
+        tail->next = tmp;
+    }
     tail = tmp;
     if (head == NULL)
     {

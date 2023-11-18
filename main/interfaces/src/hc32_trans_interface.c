@@ -43,7 +43,7 @@ void hc32_trans_init()
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
-        .source_clk = UART_SCLK_APB,
+        .source_clk = UART_SCLK_XTAL,
     };
 
     uart_param_config(HC32_TRANS_UART_NUM, &uartConfig);

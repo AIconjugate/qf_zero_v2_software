@@ -80,7 +80,8 @@
         "bmp280.h": "c",
         "cmath": "c",
         "math.h": "c",
-        "qmc5883l_app.h": "c"
+        "qmc5883l_app.h": "c",
+        "esp_pm.h": "c"
     },
     "cmake.configureOnOpen": false
 }
