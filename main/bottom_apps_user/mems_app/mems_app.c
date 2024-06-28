@@ -7,7 +7,7 @@ static void get_step_cb(void *value, size_t lenth)
     *(uint32_t *)value = step++;
 }
 
-static void mems_app_init()
+static void mems_app_init(void *arg)
 {
     key_value_register(NULL, "mems_get_step", get_step_cb);
 }
@@ -23,5 +23,5 @@ void mems_app_install()
         .icon = NULL,
         .name = "mems_app",
         .name_font = NULL};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

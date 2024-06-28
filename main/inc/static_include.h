@@ -56,6 +56,6 @@
 #define QF_ZERO_V2_DEV_EN 0       
 
 // 2：隐藏全部桌面表盘和菜单背景，加快开发烧录速度,1：隐藏除默认桌面表盘以外的所有表盘，0：使用全部表盘
-#define QF_ZERO_V2_DESKTOP_HIDDEN_EN 0 
+#define QF_ZERO_V2_DESKTOP_HIDDEN_EN 0
 
 #endif

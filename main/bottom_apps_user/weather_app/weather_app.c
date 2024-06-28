@@ -15,7 +15,7 @@ static void get_weather_cb(void *value, size_t lenth)
     weather.high_temp = weather.low_temp + 5;
 }
 
-static void weather_app_init()
+static void weather_app_init(void *arg)
 {
     weather.high_temp = 36;
     weather.low_temp = 22;
@@ -35,5 +35,5 @@ void weather_app_install()
         .icon = NULL,
         .name = "weather_app",
         .name_font = NULL};
-    app_install(&cfg);
+    app_install(&cfg, NULL);
 }

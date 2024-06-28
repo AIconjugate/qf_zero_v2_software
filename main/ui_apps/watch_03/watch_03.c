@@ -1,7 +1,7 @@
 #include "system_app.h"
 #include "desktop.h"
 
-static const char *watch_name = "qf_watch_03"; // 表盘名称
+static const char *ui_name = "qf_watch_03"; // 表盘名称
 
 LV_IMG_DECLARE(watch_03_img_bg);
 LV_IMG_DECLARE(watch_03_img_time);
@@ -68,7 +68,7 @@ static void scr_load_cb(lv_event_t *e)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-static lv_obj_t *watch_load() // 表盘加载函数，返回表盘对象
+static lv_obj_t *scr_load() // 表盘加载函数，返回表盘对象
 {
     ref_objs = lv_mem_alloc(sizeof(ref_objs_t));
 
@@ -108,6 +108,7 @@ static lv_obj_t *watch_load() // 表盘加载函数，返回表盘对象
 
     data_ref_flg = 2;
     data_ref_timer = lv_timer_create(_scr_info_ref_cb, 20, NULL);
+    lv_timer_ready(data_ref_timer);
 
     lv_obj_add_event_cb(scr, scr_load_cb, LV_EVENT_SCREEN_LOAD_START, NULL);
     lv_obj_add_event_cb(scr, scr_close_cb, LV_EVENT_SCREEN_UNLOAD_START, NULL);
@@ -116,7 +117,7 @@ static lv_obj_t *watch_load() // 表盘加载函数，返回表盘对象
     return scr;
 }
 
-static void watch_close() // 正在使用的表盘切换到不使用
+static void scr_close() // 正在使用的表盘切换到不使用
 {
     lv_timer_del(data_ref_timer);
     data_ref_timer = NULL;
@@ -127,9 +128,9 @@ static void watch_close() // 正在使用的表盘切换到不使用
 
 void watch_03_install() // 安装表盘
 {
-    desktop_watch_t cfg = {
-        .name = watch_name,
-        .watch_close = watch_close,
-        .watch_load = watch_load};
-    desktop_add_watch(&cfg);
+    desktop_ui_t cfg = {
+        .name = ui_name,
+        .ui_close = scr_close,
+        .ui_load = scr_load};
+    desktop_add_ui(&cfg);
 }

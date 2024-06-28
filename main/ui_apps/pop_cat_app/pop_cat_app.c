@@ -25,16 +25,23 @@ static void ui_event_popcat(lv_event_t *e)
     }
     if (e->code == LV_EVENT_GESTURE)
     {
-        if (lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT || lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT)
+        lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
+        if (dir == LV_DIR_RIGHT || dir == LV_DIR_LEFT)
         {
             uint8_t motor = 0;
             key_value_msg("sys_set_motor", &motor, 1);
-            key_value_msg("sys_home", NULL, 0);
+            lv_scr_load_anim_t anim;
+            if (dir == LV_DIR_LEFT)
+                anim = LV_SCR_LOAD_ANIM_MOVE_LEFT;
+            else if (dir == LV_DIR_RIGHT)
+                anim = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
+            key_value_msg("sys_home", &anim, sizeof(anim));
+            return;
         }
     }
 }
 
-static void pop_cat_app_load()
+static void pop_cat_app_load(void *arg)
 {
     lv_obj_t *scr = lv_obj_create(NULL);
 
@@ -64,5 +71,5 @@ void pop_cat_app_install()
         .icon = &pop_cat_app_icon,
         .name = "POP猫",
         .name_font = &pop_cat_app_font_24};
-    app_install(&cfg);
+    app_install(&cfg, NULL);
 }

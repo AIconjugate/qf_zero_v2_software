@@ -48,14 +48,19 @@ static void ui_event(lv_event_t *e)
             }
             else
             {
-                if (act_flg)
+                lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
+                if (dir == LV_DIR_RIGHT || dir == LV_DIR_LEFT)
                 {
-                    lv_obj_t *scr = lv_obj_create(NULL);
-                    lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-                    lv_obj_set_style_bg_color(scr, lv_color_hex(0x000000), LV_PART_MAIN);
-                    lv_scr_load_anim(scr, LV_SCR_LOAD_ANIM_NONE, 0, 0, 1); // 加载界面
+                    lv_scr_load_anim_t anim;
+                    if (dir == LV_DIR_LEFT)
+                        anim = LV_SCR_LOAD_ANIM_MOVE_LEFT;
+                    else if (dir == LV_DIR_RIGHT)
+
+                        anim = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
+
+                    key_value_msg("sys_home", &anim, sizeof(anim));
+                    return;
                 }
-                key_value_msg("sys_home", NULL, 0);
             }
         }
     }
@@ -249,7 +254,7 @@ static void calibration_cb(void *value, size_t lenth)
     }
 }
 
-static void compass_app_load()
+static void compass_app_load(void *arg)
 {
     lv_obj_t *scr = lv_obj_create(NULL);
 
@@ -296,7 +301,7 @@ static void compass_app_load()
     act_flg = 1;
 }
 
-static void compass_app_close()
+static void compass_app_close(void *arg)
 {
     if (act_flg == 0)
         return;
@@ -319,5 +324,5 @@ void compass_app_install()
         .icon = &compass_app_img_icon,
         .name = "指南针",
         .name_font = &compass_app_font_24};
-    app_install(&cfg);
+    app_install(&cfg, NULL);
 }

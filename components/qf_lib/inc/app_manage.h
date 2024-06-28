@@ -19,19 +19,19 @@ extern "C"
 
     // app自行通过RTOS或btask进行创建后自行管理
 
-#define app_none -1
+#define app_handle_none -1
 
     typedef struct _app_config_t
     {
-        const char *name;        // app名称，静态字符串
-        const void *name_font;   // 名称使用的字体
-        const void *icon;        // app图标，静态图标
-        void (*app_init)();      // 初始化APP入口，在安装app时运行一次
-        void (*app_kill)();      // 彻底关闭APP入口
-        void (*app_load)();      // 加载APP到前台入口
-        void (*app_close)();     // APP切到后台入口
-        void (*app_power_off)(); // 彻底关机处理函数，在此保存数据到EEPROM
-        uint8_t has_gui;         // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
+        const char *name;             // app名称，静态字符串
+        const void *name_font;        // 名称使用的字体
+        const void *icon;             // app图标，静态图标
+        void (*app_init)(void *arg);  // 初始化APP入口，在安装app时运行一次
+        void (*app_kill)(void *arg);  // 彻底关闭APP入口
+        void (*app_load)(void *arg);  // 加载APP到前台入口
+        void (*app_close)(void *arg); // APP切到后台入口
+        void (*app_power_off)();      // 彻底关机处理函数，在此保存数据到EEPROM
+        uint8_t has_gui;              // 1：APP有GUI界面，0：无GUI界面（桌面不展示APP图标名称，默认底层后台程序）
     } app_config_t;
 
     typedef struct _app_obj_t
@@ -48,9 +48,10 @@ extern "C"
      * @brief 安装APP并运行app初始化函数
      *
      * @param cfg app配置参数
+     * @param arg 用户数据
      * @return app_handle_t 返回ID句柄，如果为app_none，则安装失败
      */
-    app_handle_t app_install(app_config_t *cfg);
+    app_handle_t app_install(app_config_t *cfg, void *arg);
 
     /**
      * @brief 获取APP句柄
@@ -80,27 +81,30 @@ extern "C"
      *
      * @param name app名称
      * @param handle app句柄
+     * @param arg 用户数据
      * @return uint8_t 1：成功，0：不存在APP
      */
-    uint8_t app_load(const char *name, app_handle_t handle);
+    uint8_t app_load(const char *name, app_handle_t handle, void *arg);
 
     /**
      * @brief 关闭APP（后台），参数二选一，名称不为NULL使用名称查找APP，名称为NULL则使用句柄查找APP(高效率)
      *
      * @param name app名称
      * @param handle app句柄
+     * @param arg 用户数据
      * @return uint8_t 1：成功，0：不存在APP
      */
-    uint8_t app_close(const char *name, app_handle_t handle);
+    uint8_t app_close(const char *name, app_handle_t handle, void *arg);
 
     /**
      * @brief 杀死APP（清理后台），参数二选一，名称不为NULL使用名称查找APP，名称为NULL则使用句柄查找APP(高效率)
      *
      * @param name app名称
      * @param handle app句柄
+     * @param arg 用户数据
      * @return uint8_t 1：成功，0：不存在APP
      */
-    uint8_t app_kill(const char *name, app_handle_t handle);
+    uint8_t app_kill(const char *name, app_handle_t handle, void *arg);
 
     /**
      * @brief 关闭所有app进程，在息屏前会调用此函数，需要掉电保存的数据可以在kill函数里进行相关处理

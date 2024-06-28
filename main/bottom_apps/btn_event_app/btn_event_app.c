@@ -1,5 +1,13 @@
 #include "btn_event_app.h"
 #include "system_app.h"
+#include "static_include.h"
+
+static uint8_t gameing = 0;
+
+static void btn_app_game_mode_cb(void *arg, size_t size)
+{
+    gameing = *(uint8_t *)arg;
+}
 
 static void btn_event_task(btask_event_t *arg)
 {
@@ -22,7 +30,9 @@ static void btn_event_task(btask_event_t *arg)
     }
     else if (ret == btn_double_click)
     {
-        key_value_msg("sys_home", NULL, 0);
+        if (gameing == 0)
+            key_value_msg("sys_home", NULL, 0);
+        key_value_msg("btn_double", NULL, 0);
     }
     else if (ret == btn_long_press)
     {
@@ -30,13 +40,17 @@ static void btn_event_task(btask_event_t *arg)
     }
     else if (ret == btn_click)
     {
-        key_value_msg("btn_click", NULL, 0);
+        if (memcmp(app_get_loaded()->name, "desktop", 7) == 0)
+            key_value_msg("sys_sleep", NULL, 0);
+        else
+            key_value_msg("btn_click", NULL, 0);
     }
 }
 
-static void btn_event_app_init()
+static void btn_event_app_init(void *arg)
 {
     btask_creat_ms(20, btn_event_task, 0, "btn_event", NULL);
+    key_value_register(NULL, "game_mode", btn_app_game_mode_cb);
 }
 
 void btn_event_app_install()
@@ -50,5 +64,5 @@ void btn_event_app_install()
         .has_gui = 0,
         .icon = NULL,
         .name = "btn_event"};
-    app_install(&cfg);
+    app_install(&cfg, NULL);
 }

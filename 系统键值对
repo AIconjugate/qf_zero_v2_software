@@ -36,7 +36,12 @@
 #########################################################################################
 #  以下为用户自行发布的键,其中，获取的内容需要自己定义相应类型带入地址返回数据，设置参数需要自己定义相应类型的变量设置好值后带入参数地址进行设置
 
-#  功能					    键名			    值			            类型宽度
+#  功能					    键名			        值			            类型宽度
+
+#  屏幕设置为触摸模式（默认）    "sys_touch"         NULL                   0
+#  屏幕设置为鼠标模式           "sys_mouse"         NULL                   0
+#  获取触摸lvgl输入设备         "sys_get_tp_indev"  lv_indev_t *            lv_indev_t *
+#  设置系统是否处于游戏模式      "game_mode"         0关闭1开启              uint8_t 
 
 #  设置背光亮度:				"sys_set_blk"		1-100			        uint8_t
 #  查询背光亮度:				"sys_get_blk"		1-100			        uint8_t
@@ -58,6 +63,7 @@
 
 #  关机                        "sys_power_off"     NULL                   0
 #  重启                        "sys_restart"       NULL                   0
+#  休眠                        "sys_sleep"         NULL                   0
 
 #  获取GUI增删权限             "take_gui_key"      NULL                    0
 #  归还GUI增删权限             "give_gui_key"      NULL                    0

@@ -63,7 +63,7 @@ void slider_cb(lv_event_t *e)
     key_value_msg("sys_set_blk", &blk, 1);
 }
 
-static void test_app_load()
+static void test_app_load(void *arg)
 {
     static RTC_FAST_ATTR uint8_t reset_count = 0;
     static userdata_t labels;
@@ -105,7 +105,7 @@ static void test_app_load()
     app_scr_load(obj_test, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0);
 }
 
-static void test_app_close()
+static void test_app_close(void *arg)
 {
     lv_timer_del(test_timer);
 }
@@ -122,5 +122,5 @@ void test_app_install()
         .icon = &test_app_icon,
         .name = "临时测试",
         .name_font = &test_app_font_24};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

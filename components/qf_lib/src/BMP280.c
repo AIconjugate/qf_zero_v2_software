@@ -1,5 +1,5 @@
 
-#include "bmp280.h"
+#include "BMP280.h"
 
 #if bmp280_lib_compile_en
 

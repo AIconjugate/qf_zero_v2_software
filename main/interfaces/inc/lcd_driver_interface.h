@@ -8,6 +8,8 @@
 
 #define LCD_PIXEL_CLOCK_HZ (20 * 1000 * 1000) // 总线频率
 
+#define LCD_SUPPORT_TE 0 // 是否支持垂直同步，开启能降低撕裂但是会降低帧率,demo
+
 // 8080接口IO定义
 #define LCD_PIN_NUM_DATA0 6
 #define LCD_PIN_NUM_DATA1 12
@@ -34,7 +36,7 @@
 #define LCD_LEDC_MODE LEDC_LOW_SPEED_MODE   // 定时器模式
 #define LCD_LEDC_CHANNEL LEDC_CHANNEL_2     // 通道
 #define LCD_LEDC_DUTY_RES LEDC_TIMER_10_BIT // 分辨率
-#define LCD_LEDC_FREQUENCY (1000)           // 频率
+#define LCD_LEDC_FREQUENCY (200)           // 频率
 
 /**
  * @brief 初始化LCD
@@ -64,8 +66,8 @@ lv_disp_drv_t *lcd_get_disp_drv();
 
 /**
  * @brief 获取LCD驱动器总线对象
- * 
- * @return esp_lcd_panel_handle_t 
+ *
+ * @return esp_lcd_panel_handle_t
  */
 esp_lcd_panel_handle_t lcd_get_panel_handle();
 
@@ -77,6 +79,5 @@ esp_lcd_panel_handle_t lcd_get_panel_handle();
  * @param color_map
  */
 void lcd_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map);
-
 
 #endif

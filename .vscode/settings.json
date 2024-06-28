@@ -81,7 +81,10 @@
         "cmath": "c",
         "math.h": "c",
         "qmc5883l_app.h": "c",
-        "esp_pm.h": "c"
+        "esp_pm.h": "c",
+        "watch_03.h": "c",
+        "trans_packer.h": "c"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "idf.port": "/dev/ttyACM0"
 }

@@ -19,7 +19,8 @@ typedef struct
     uint8_t lcd_blk;            // 背光亮度
     clock_time_t time;          // 时间
     uint32_t screen_rest_count; // 休眠计数
-    cw2015_bat_info_t bat_info;
+    cw2015_bat_info_t bat_info; // 电池信息
+    uint8_t soft_version[3];    // 固件版本号
 } system_data_t;
 
 /**
@@ -42,12 +43,19 @@ typedef struct
 static system_paras_t sys_paras;
 static RTC_FAST_ATTR uint8_t last_blk = 50;
 static RTC_FAST_ATTR uint8_t wake_mode = power_on;
+static uint8_t low_blk_en = 0;
 
 extern void app_startup_list();
+static void system_power_off_cb(void *value, size_t lenth);
 
 // static void load_desktop_cb(lv_timer_t *e)
 // {
 // }
+
+void system_get_soft_version(uint8_t *ver)
+{
+    memcpy(ver, sys_paras.data.soft_version, sizeof(sys_paras.data.soft_version));
+}
 
 void system_init()
 {
@@ -65,8 +73,8 @@ void system_init()
     system_take_gui_key();
     app_startup_list(); // 初始化应用程序
 
-    desktop_app_install();  // 安装桌面APP,放在最后
-    app_load("desktop", 0); // 加载桌面
+    desktop_app_install();                      // 安装桌面APP,放在最后
+    app_load("desktop", app_handle_none, NULL); // 加载桌面
     system_give_gui_key();
 }
 
@@ -75,11 +83,14 @@ static void system_data_init()
     memset(&sys_paras, 0, sizeof(system_paras_t));
     sys_paras.data.lcd_blk = last_blk;
     sys_paras.eeprom.screen_rest_sec = system_rest_sec_default;
+    const uint8_t version_tmp[3] = {software_version};
+    memcpy(sys_paras.data.soft_version, version_tmp, sizeof(version_tmp));
 }
 
 static void system_data_save()
 {
-    last_blk = sys_paras.data.lcd_blk;
+    if (low_blk_en == 0)
+        last_blk = sys_paras.data.lcd_blk;
 }
 
 static void clock_run_tsak(void *arg) // 时间运行任务
@@ -118,16 +129,19 @@ static void clock_run_tsak(void *arg) // 时间运行任务
     {
         if (low_blk_cnt == 0)
         {
+            low_blk_en = 1;
             _last_blk = sys_paras.data.lcd_blk;
-            system_set_blk(5);
+            if (_last_blk < 5)
+                system_set_blk(1);
+            else
+                system_set_blk(5);
         }
 
         low_blk_cnt++;
         if (low_blk_cnt == 5)
         {
-            system_set_blk(_last_blk);
-            hc32_trans_send_pack("hc_sleep", NULL, 0);
-            vTaskDelay(5);
+            // system_set_blk(_last_blk);
+
             system_deep_sleep_start();
         }
     }
@@ -138,6 +152,7 @@ static void clock_run_tsak(void *arg) // 时间运行任务
             system_set_blk(_last_blk);
         }
         low_blk_cnt = 0;
+        low_blk_en = 0;
     }
     cw2015_get_info(&sys_paras.data.bat_info);
 }
@@ -366,22 +381,18 @@ static void system_get_usb_sta_cb(void *value, size_t lenth)
 
 void system_deep_sleep_start()
 {
+    hc32_trans_send_pack("hc_sleep", NULL, 0);
     wake_mode = wake_up;
+    app_close(app_get_loaded()->name, app_handle_none, NULL);
     app_kill_all();
+    printf("sleep start\n");
+    vTaskDelay(5);
     esp_deep_sleep_start();
 }
 
-void system_power_off()
+static void system_sleep_cb(void *value, size_t lenth)
 {
-    wake_mode = power_on;
-    app_kill_all();
-    app_power_off_all();
-    esp_deep_sleep_start();
-}
-
-static void system_power_off_cb(void *value, size_t lenth)
-{
-    system_power_off();
+    system_deep_sleep_start();
 }
 
 void system_restart()
@@ -416,21 +427,20 @@ static void system_give_gui_key_cb(void *value, size_t lenth)
     system_give_gui_key();
 }
 
-uint8_t system_tp_type(uint8_t *ret)
+uint8_t system_get_tp_type()
 {
-    static uint8_t last_sta = 0;
-    if (ret == NULL)
-        return last_sta;
-    last_sta = *ret;
-    return last_sta;
+    if (cst816_read_slide_type() == cst816_slided)
+        return 1;
+    else
+        return 0;
 }
 
 static void system_get_tp_type_cb(void *value, size_t lenth)
 {
-    *(uint8_t *)value = system_tp_type(NULL);
+    *(uint8_t *)value = system_get_tp_type();
 }
 
-static void sys_app_init()
+static void sys_app_init(void *arg)
 {
     system_data_init();
 
@@ -470,13 +480,31 @@ static void sys_app_init()
 
     key_value_register(NULL, "sys_power_off", system_power_off_cb); // 订阅关机事件
     key_value_register(NULL, "sys_restart", system_restart_cb);     // 订阅重启事件
+    key_value_register(NULL, "sys_sleep", system_sleep_cb);         // 订阅休眠 事件
 
     cw2015_get_info(&sys_paras.data.bat_info); // 同步一次电池信息
 }
 
-static void system_app_kill()
+static void system_app_kill(void *arg)
 {
     system_data_save();
+}
+
+void system_power_off(void *arg)
+{
+    hc32_trans_send_pack("hc_sleep", NULL, 0);
+    vTaskDelay(5);
+    app_close(app_get_loaded()->name, app_handle_none, NULL);
+    wake_mode = power_on;
+    app_kill_all();
+    app_power_off_all();
+    printf("power off\n");
+    esp_deep_sleep_start();
+}
+
+static void system_power_off_cb(void *value, size_t lenth)
+{
+    system_power_off(NULL);
 }
 
 void system_app_install()
@@ -490,5 +518,5 @@ void system_app_install()
         .has_gui = 0,
         .icon = NULL,
         .name = "system"};
-    app_install(&cfg);
+    app_install(&cfg, NULL);
 }

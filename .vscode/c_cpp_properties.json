@@ -10,7 +10,9 @@
             "intelliSenseMode": "windows-gcc-x86",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json",
             "configurationProvider": "ms-vscode.makefile-tools",
+            //"compilerPath": "${config:idf.toolsPath}\\tools\\xtensa-esp32s3-elf\\esp-2021r2-patch5-8.4.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gcc.exe"
             "compilerPath": "d:\\install\\esp\\tool\\tools\\xtensa-esp32s3-elf\\esp-2021r2-patch5-8.4.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gcc.exe"
+            //上面路径自行修改为自己的idf tool前缀
         }
     ],
     "version": 4

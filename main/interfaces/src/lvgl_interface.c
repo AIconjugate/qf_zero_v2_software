@@ -20,26 +20,12 @@ static void lvgl_tic_cb(void *arg)
     xEventGroupSetBits(lvgl_event_group, 0x01);
 }
 
-// static void IRAM_ATTR te_intrHandler(void *arg)
-// {
-
-//     BaseType_t xHigherPriorityTaskWoken = pdFALSE, xResult;
-//     xResult = xEventGroupSetBitsFromISR(
-//         lvgl_event_group,
-//         0x01,
-//         &xHigherPriorityTaskWoken);
-
-//     if (xResult == pdPASS)
-//     {
-//         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-//     }
-// }
-
 // static void ben_finished_cb()
 // {
 //     uint8_t tmp = 0;
 //     key_value_msg("sys_always_on", &tmp, 1);
 // }
+
 
 static void lvgl_task(void *arg)
 {
@@ -70,10 +56,14 @@ void lv_interface_init()
 
     lv_init(); // 初始化LVGL
 
+#if LCD_SUPPORT_TE
+    lv_color_t *buf1 = heap_caps_malloc(LVGL_BUFFER_SIZE * sizeof(lv_color_t), LCD_BUFFER_USE); // 申请buffer
+    lv_disp_draw_buf_init(&disp_buf, buf1, NULL, LVGL_BUFFER_SIZE);
+#else
     lv_color_t *buf1 = heap_caps_malloc(LVGL_BUFFER_SIZE * sizeof(lv_color_t), LCD_BUFFER_USE); // 申请buffer
     lv_color_t *buf2 = heap_caps_malloc(LVGL_BUFFER_SIZE * sizeof(lv_color_t), LCD_BUFFER_USE); //
-
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LVGL_BUFFER_SIZE);
+#endif
 
     lv_disp_drv_t *disp_drv = lcd_get_disp_drv(); // 获取LCD对象
     lv_disp_drv_init(disp_drv);                   // 初始化
@@ -81,6 +71,9 @@ void lv_interface_init()
     disp_drv->ver_res = LCD_V_RES;
     disp_drv->flush_cb = lcd_lvgl_flush_cb;
     disp_drv->draw_buf = &disp_buf;
+#if LCD_SUPPORT_TE
+    disp_drv->full_refresh = 1;
+#endif
 
     esp_lcd_panel_handle_t panel_handle = lcd_get_panel_handle();
     disp_drv->user_data = panel_handle;
@@ -94,10 +87,4 @@ void lv_interface_init()
     esp_timer_handle_t ms_tick_timer = NULL;
     esp_timer_create(&ms_tick_timer_args, &ms_tick_timer);
     esp_timer_start_periodic(ms_tick_timer, LVGL_REFRESH_TIME_MS * 1000);
-
-    // gpio_pad_select_gpio(LCD_PIN_NUM_TE);
-    // gpio_set_direction(LCD_PIN_NUM_TE, GPIO_MODE_INPUT);
-    // gpio_set_intr_type(LCD_PIN_NUM_TE, GPIO_INTR_POSEDGE);
-    // gpio_install_isr_service(0);
-    // gpio_isr_handler_add(LCD_PIN_NUM_TE, te_intrHandler, (void *)LCD_PIN_NUM_TE);
 }

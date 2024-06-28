@@ -58,7 +58,7 @@ extern "C"
 // #include "LIB_CONFIG.h"
 
 // 必要依赖库包含
-#include <String.H>
+#include <string.h>
 #include <stdint.h> //uint类型报错取消注释
 
 // 功能使能配置

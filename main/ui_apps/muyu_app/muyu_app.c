@@ -82,8 +82,18 @@ void ui_event_muyu(lv_event_t *e)
     }
     else if (e->code == LV_EVENT_GESTURE)
     {
-        if (lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT || lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT)
-            key_value_msg("sys_home", NULL, 0);
+        lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
+        if (dir == LV_DIR_RIGHT || dir == LV_DIR_LEFT)
+        {
+            lv_scr_load_anim_t anim;
+            if (dir == LV_DIR_LEFT)
+                anim = LV_SCR_LOAD_ANIM_MOVE_LEFT;
+            else if (dir == LV_DIR_RIGHT)
+                anim = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
+            key_value_msg("sys_home", &anim, sizeof(anim));
+            muyu_cnt--;
+            return;
+        }
     }
 }
 
@@ -94,7 +104,7 @@ void ui_muyu_event_btn(lv_event_t *e)
     lv_obj_align((lv_obj_t *)e->user_data, LV_ALIGN_BOTTOM_MID, 0, -8);
 }
 
-static void muyu_app_load()
+static void muyu_app_load(void *arg)
 {
     app_scr = lv_obj_create(NULL);
 
@@ -123,7 +133,7 @@ static void muyu_app_load()
     app_scr_load(app_scr, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0); // 加载APP界面
 }
 
-static void muyu_app_close()
+static void muyu_app_close(void *arg)
 {
     app_scr = NULL;
 }
@@ -140,5 +150,5 @@ void muyu_app_install()
         .icon = &muyu_app_icon,
         .name = "电子木鱼",
         .name_font = &muyu_app_font_24};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

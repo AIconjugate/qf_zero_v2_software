@@ -10,7 +10,7 @@ static void get_altitude_cb(void *value, size_t lenth)
     }
 }
 
-static void atmospheric_app_init()
+static void atmospheric_app_init(void *arg)
 {
     bmp280_trans_cb_t trans = {
         .bmp_read_bytes = senser_iic_read_bytes,
@@ -22,7 +22,7 @@ static void atmospheric_app_init()
     key_value_register(NULL, "altitude_get", get_altitude_cb);
 }
 
-static void atmospheric_app_kill()
+static void atmospheric_app_kill(void *arg)
 {
     bmp280_sleep(1);
 }
@@ -38,5 +38,5 @@ void atmospheric_app_install()
         .icon = NULL,
         .name = "atmospheric_app",
         .name_font = NULL};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

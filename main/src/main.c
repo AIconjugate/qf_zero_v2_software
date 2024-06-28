@@ -2,7 +2,7 @@
 
 void app_main(void)
 {
-    // esp_deep_sleep_start();
+    //esp_deep_sleep_start();
     system_init(); // 系统初始化
 #if 0
     for (;;)

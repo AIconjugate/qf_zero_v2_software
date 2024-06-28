@@ -47,7 +47,7 @@ static void hc32_trans_app_task(btask_event_t *arg)
     }
 }
 
-static void hc32_trans_app_init()
+static void hc32_trans_app_init(void *arg)
 {
     key_value_msg("hc32_handle", &handle, 0);
     btask_creat_ms(10, hc32_trans_app_task, 0, "hc32_trans", NULL);
@@ -64,5 +64,5 @@ void hc32_trans_app_install()
         .has_gui = 0,
         .icon = NULL,
         .name = "hc32_trans"};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

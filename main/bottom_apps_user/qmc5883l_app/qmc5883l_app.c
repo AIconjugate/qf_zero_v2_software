@@ -56,7 +56,7 @@ static void calibration_cb(void *value, size_t lenth)
     }
 }
 
-static void app_init()
+static void app_init(void *arg)
 {
     qmc5883l_set_calibration(&range);
 
@@ -65,7 +65,7 @@ static void app_init()
     key_value_register(NULL, "qmc_calibration", calibration_cb);
 }
 
-static void app_kill_cb()
+static void app_kill_cb(void *arg)
 {
     qmc5883l_sleep(1);
 }
@@ -82,5 +82,5 @@ void qmc5883l_app_install()
         .icon = NULL,
         .name = "qmc5883l_app",
         .name_font = NULL};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

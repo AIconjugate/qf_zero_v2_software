@@ -72,7 +72,7 @@ static void usb_chek_app_task(void *arg)
     }
 }
 
-static void usb_trans_app_init()
+static void usb_trans_app_init(void *arg)
 {
     xTaskCreatePinnedToCore(usb_chek_app_task, "usb_trans", 1024 * 3, NULL, configMAX_PRIORITIES, NULL, 0);
 }
@@ -87,5 +87,5 @@ void usb_trans_app_install()
         .has_gui = 0,
         .icon = NULL,
         .name = "usb_trans"};
-    app_install(&cfg);
+    app_install(&cfg,NULL);
 }

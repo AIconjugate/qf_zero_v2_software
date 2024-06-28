@@ -1,5 +1,5 @@
 
-#include "qmc5883l.h"
+#include "QMC5883L.h"
 
 #if qmc5883l_lib_compile_en
 

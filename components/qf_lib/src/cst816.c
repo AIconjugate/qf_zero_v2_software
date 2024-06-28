@@ -22,6 +22,39 @@ static cst816_info_t _tp_info;
 static tp_i2c_cb _cb = {NULL, NULL};
 static uint8_t _init_flg = 2;
 
+void cst816_read_point(cst816_point_t *point)
+{
+    *point = _tp_info.point;
+}
+
+cst816_slide_type_t cst816_read_slide_type()
+{
+    if (_tp_info.state == 0) // 无触摸
+    {
+        int16_t cha = _tp_info.point.start_x - _tp_info.point.end_x;
+        if (cha < 2 && cha > -2)
+        {
+            cha = _tp_info.point.start_y - _tp_info.point.end_y;
+            if (cha < 2 && cha > -2)
+            {
+                return cst816_click;
+            }
+        }
+        return cst816_slided;
+    }
+    // 有触摸
+    int16_t cha = _tp_info.point.start_x - _tp_info.point.now_x;
+    if (cha < 2 && cha > -2)
+    {
+        cha = _tp_info.point.start_y - _tp_info.point.now_y;
+        if (cha < 2 && cha > -2)
+        {
+            return cst816_pressed;
+        }
+    }
+    return cst816_slided;
+}
+
 void cst816_attach_i2c_cb(tp_i2c_cb *cfg)
 {
     _cb = *cfg;
@@ -91,8 +124,10 @@ void cst816_read_info(cst816_info_t *info)
         _touch_intr = 0;    // 消除触摸中断标志
         _tp_info.state = 0; // 消除内部触摸状态
 
-        info->end_x = _tp_info.now_x; // 记录下结束点
-        info->end_y = _tp_info.now_y;
+        info->point.end_x = _tp_info.point.end_x; // 记录下结束点
+        info->point.end_y = _tp_info.point.end_y;
+        _tp_info.point.now_x = 0;
+        _tp_info.point.now_y = 0;
 
 #if TP_GESTURE_EN
         if (gesture_tmp != 0) // 有手势
@@ -139,35 +174,37 @@ void cst816_read_info(cst816_info_t *info)
     _cb.i2c_read_bytes(TP_IIC_ADD, XposH, data, 4); // 读取实时x，y
 
 #if TP_SWAP_XY
-    _tp_info.now_y = ((data[0] & 0x0f) << 8) | data[1];
-    _tp_info.now_x = ((data[2] & 0x0f) << 8) | data[3];
+    _tp_info.point.now_y = ((data[0] & 0x0f) << 8) | data[1];
+    _tp_info.point.now_x = ((data[2] & 0x0f) << 8) | data[3];
 #else
-    _tp_info.now_x = ((data[0] & 0x0f) << 8) | data[1];
-    _tp_info.now_y = ((data[2] & 0x0f) << 8) | data[3];
+    _tp_info.point.now_x = ((data[0] & 0x0f) << 8) | data[1];
+    _tp_info.point.now_y = ((data[2] & 0x0f) << 8) | data[3];
 #endif
 
 #if TP_SWAP_X
-    _tp_info.now_x = -_tp_info.now_x + TP_WIDTH; // 翻转x坐标
+    _tp_info.point.now_x = -_tp_info.point.now_x + TP_WIDTH; // 翻转x坐标
 #endif
 
 #if TP_SWAP_Y
-    _tp_info.now_y = -info->now_y + TP_HEIGHT; // 翻转y坐标
+    _tp_info.point.now_y = -_tp_info.point.now_y + TP_HEIGHT; // 翻转y坐标
 #endif
 
-    if (_tp_info.now_x >= TP_WIDTH || _tp_info.now_y >= TP_HEIGHT) // 范围消抖
+    if (_tp_info.point.now_x >= TP_WIDTH || _tp_info.point.now_y >= TP_HEIGHT) // 范围消抖
         return;
 
     if (_tp_info.state == 0) // 触摸起点
     {
-        info->start_x = _tp_info.now_x; // 外部赋值起点
-        info->start_y = _tp_info.now_y;
-        _tp_info.start_x = _tp_info.now_x; // 内部记录起点
-        _tp_info.start_y = _tp_info.now_y;
+        info->point.start_x = _tp_info.point.now_x; // 外部赋值起点
+        info->point.start_y = _tp_info.point.now_y;
+        _tp_info.point.start_x = _tp_info.point.now_x; // 内部记录起点
+        _tp_info.point.start_y = _tp_info.point.now_y;
         _tp_info.state = info->state; // 内部状态同步
     }
 
-    info->now_x = _tp_info.now_x; // 同步坐标
-    info->now_y = _tp_info.now_y;
+    info->point.now_x = _tp_info.point.now_x; // 同步坐标
+    info->point.now_y = _tp_info.point.now_y;
+    _tp_info.point.end_x = _tp_info.point.now_x;
+    _tp_info.point.end_y = _tp_info.point.now_y;
 }
 
 void cst816_sleep()

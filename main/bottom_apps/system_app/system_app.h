@@ -12,6 +12,10 @@
 */
 
 #define system_rest_sec_default 15
+#define nvs_storage_name "sys_app_datas"
+#define nvs_version 1, 0, 0      // nvs版本号
+#define software_version 1, 0, 8 // 固件版本号
+#define software_version_release 1
 
 typedef struct
 {
@@ -184,9 +188,16 @@ void hc32_trans_send_pack(const char *cmd, uint8_t *dat, size_t lenth);
 /**
  * @brief TP操作类型，可用于防止LVGL滑动切换SCREEN时误触按钮
  *
- * @param ret 0：点击操作，1：有滑动的操作
- * @return uint8_t NULL:读取，不为NULL：设置
+ * @return ret 0：点击操作，1：有滑动的操作
  */
-uint8_t system_tp_type(uint8_t *ret);
+uint8_t system_get_tp_type();
+
+/**
+ * @brief 获取系统固件版本
+ * 
+ * @param ver 三字节
+ */
+void system_get_soft_version(uint8_t *ver);
+
 
 #endif

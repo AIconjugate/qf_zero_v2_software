@@ -1,2 +1,4 @@
-烧录偏移地址查看工程内的分区表文件即可
-分区表和bootloader的bin没特别说明的话就用老版本的即可
+使用QF-ZERO-TOOL，选择更新式更新固件即可
+用户仅需更新qf_zero_v2_firmeware_Vx.x.x_app
+bootloader和partition table TOOL内已经自带无需选择
+如第三方开发者需要使用TOOL更新，需要把固件重命名为xxx_app.bin  ,_app.bin为必要结尾

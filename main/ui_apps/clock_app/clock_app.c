@@ -1,6 +1,7 @@
 #include "clock_app.h"
 #include "system_app.h"
 #include "desktop.h"
+#include "qf_zero_v2_gui_api_public.h"
 
 LV_IMG_DECLARE(clock_app_icon);
 LV_IMG_DECLARE(clock_app_img_alarm);
@@ -13,66 +14,28 @@ LV_FONT_DECLARE(clock_app_font_24);
 
 static lv_obj_t *scr_main = NULL;
 
-typedef struct
-{
-    uint8_t scr_main_flg : 1;
-    uint8_t gesture_en : 1;
-} flg_mask_t;
-
-static flg_mask_t flag_mask;
 static clock_time_t time_tmp;
 static uint8_t set_num_tmp = 0;
 
 static void scr_event_cb(lv_event_t *e)
 {
 
-    if (e->code == LV_EVENT_PRESSED)
-    {
-        flag_mask.gesture_en = 1;
-    }
-
-    if (e->code == LV_EVENT_SCREEN_LOADED)
-    {
-        if (e->target == scr_main)
-            flag_mask.scr_main_flg = 1;
-        else
-            flag_mask.scr_main_flg = 0;
-    }
-
-    if (e->code != LV_EVENT_GESTURE || flag_mask.gesture_en == 0)
+    if (e->code != LV_EVENT_GESTURE)
         return;
 
-    if (lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT || lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT)
+    lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
+    if (dir == LV_DIR_RIGHT || dir == LV_DIR_LEFT)
     {
-        flag_mask.gesture_en = 0; // 单次触摸只允许一次手势
-        if (flag_mask.scr_main_flg == 1)
-        {
-            key_value_msg("sys_home", NULL, 0);
-        }
-        else
-        {
-            lv_scr_load_anim(scr_main, LV_SCR_LOAD_ANIM_NONE, 0, 0, 1); // 加载界面
-            flag_mask.scr_main_flg = 1;
-        }
+        lv_scr_load_anim_t anim;
+        if (dir == LV_DIR_LEFT)
+            anim = LV_SCR_LOAD_ANIM_MOVE_LEFT;
+        else if (dir == LV_DIR_RIGHT)
+
+            anim = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
+
+        key_value_msg("sys_home", &anim, sizeof(anim));
+        return;
     }
-}
-
-static lv_obj_t *creat_flex_cont(lv_obj_t *pare)
-{
-    lv_obj_t *obj = lv_obj_create(pare);
-
-    lv_obj_set_style_pad_all(obj, 25, LV_PART_MAIN);
-    lv_obj_set_style_pad_row(obj, 10, LV_PART_MAIN);
-
-    lv_obj_set_size(obj, LV_HOR_RES, LV_VER_RES);
-    lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_scroll_dir(obj, LV_DIR_VER);
-    lv_obj_set_scroll_snap_y(obj, LV_SCROLL_SNAP_CENTER);
-    lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
-
-    lv_obj_set_style_bg_color(obj, lv_color_hex(0), 0);
-
-    return obj;
 }
 
 static lv_obj_t *create_label_white(lv_obj_t *pare, const lv_font_t *font, const char *str)
@@ -82,26 +45,6 @@ static lv_obj_t *create_label_white(lv_obj_t *pare, const lv_font_t *font, const
     lv_obj_set_style_text_font(label, font, 0);
     lv_label_set_text(label, str);
     return label;
-}
-
-static lv_obj_t *create_row_btn(lv_obj_t *pare, const void *img, const lv_font_t *font, const char *str)
-{
-    lv_obj_t *btn = lv_btn_create(pare);
-    lv_obj_set_size(btn, 200, clock_app_memu_row_height);
-    lv_obj_set_style_radius(btn, clock_app_memu_row_height / 2, 0);
-    lv_obj_set_style_bg_color(btn, lv_color_hex(0x626973), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(btn, 200, LV_PART_MAIN);
-
-    lv_obj_t *img_t = lv_img_create(btn);
-    lv_img_set_src(img_t, img);
-    lv_obj_align(img_t, LV_ALIGN_LEFT_MID, 5, 0);
-
-    lv_obj_t *label = lv_label_create(btn);
-    lv_obj_set_style_text_font(label, font, 0);
-    lv_label_set_text(label, str);
-    lv_obj_align_to(label, img_t, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
-
-    return btn;
 }
 
 static void set_time_ref_label(lv_obj_t *label, uint8_t var)
@@ -247,7 +190,6 @@ static void img_btn_cb_set_time(lv_event_t *e)
     }
 
     lv_scr_load_anim(scr_main, LV_SCR_LOAD_ANIM_NONE, 0, 0, 1); // 返回APP主界面
-    flag_mask.scr_main_flg = 1;
 }
 
 static void set_day_cb(lv_event_t *e)
@@ -255,15 +197,12 @@ static void set_day_cb(lv_event_t *e)
     uint8_t tmp;
     key_value_msg("tp_type", &tmp, 1); // 获取屏幕操作是否为点击
     if (tmp)                           // 如果有滑动
-    {
-        return; // 丢弃CLICK操作
-    }
+        return;                        // 丢弃CLICK操作
 
     lv_obj_t *cont = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(cont, lv_color_hex(0), 0);
     lv_obj_set_size(cont, LV_HOR_RES, LV_VER_RES);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_OFF);
-    //lv_obj_add_event_cb(cont, scr_event_cb, LV_EVENT_ALL, NULL);
 
     lv_obj_t *btn[6];
     lv_obj_t *label[6];
@@ -338,32 +277,39 @@ static void set_day_cb(lv_event_t *e)
 
 static void clock_load_set_time()
 {
-    lv_obj_t *btn = create_row_btn(scr_main, &clock_app_img_day, &clock_app_font_24, "时间日期");
+    lv_obj_t *btn = public_create_col_img_label(scr_main, &clock_app_img_day, "时间日期", &clock_app_font_24);
     lv_obj_add_event_cb(btn, set_day_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_scroll_to_view(btn, LV_ANIM_OFF);
 }
 
 static void clock_stopwatch_load()
 {
     // lv_obj_t *btn =
-    create_row_btn(scr_main, &clock_app_img_stopwatch, &clock_app_font_24, "秒表");
+    public_create_col_img_label(scr_main, &clock_app_img_stopwatch, "秒表", &clock_app_font_24);
+    // TO DO
 }
 
 static void clock_alarm_load()
 {
     // lv_obj_t *btn =
-    create_row_btn(scr_main, &clock_app_img_alarm, &clock_app_font_24, "闹钟");
+    public_create_col_img_label(scr_main, &clock_app_img_alarm, "闹钟", &clock_app_font_24);
+    // TO DO
 }
 
-static void clock_app_load()
+static void clock_app_load(void *arg)
 {
-    scr_main = creat_flex_cont(NULL);
+    scr_main = public_create_menu_list(NULL);
+    //lv_obj_set_style_pad_row(scr_main, -25, LV_PART_MAIN);
 
     clock_load_set_time();  // 设置时间功能
+    public_create_col_line(scr_main, lv_color_hex(0x2D2D2D), 90);
     clock_stopwatch_load(); // 秒表
+    public_create_col_line(scr_main, lv_color_hex(0x2D2D2D), 90);
     clock_alarm_load();     // 闹钟
 
-    lv_obj_add_event_cb(scr_main, scr_event_cb, LV_EVENT_ALL, NULL);
+    lv_event_send(scr_main, LV_EVENT_SCROLL, NULL);
+    lv_obj_scroll_to_view(lv_obj_get_child(scr_main, 0), LV_ANIM_OFF);
+
+    lv_obj_add_event_cb(scr_main, scr_event_cb, LV_EVENT_GESTURE, NULL);
     app_scr_load(scr_main, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0); // 加载APP界面
 }
 
@@ -379,5 +325,5 @@ void clock_app_install()
         .icon = &clock_app_icon,
         .name = "时钟",
         .name_font = &clock_app_font_24};
-    app_install(&cfg);
+    app_install(&cfg, NULL);
 }

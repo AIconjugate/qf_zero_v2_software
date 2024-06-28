@@ -67,11 +67,11 @@ static app_list_t *app_list_find_id(app_handle_t handle)
     return move;
 }
 
-app_handle_t app_install(app_config_t *cfg)
+app_handle_t app_install(app_config_t *cfg, void *arg)
 {
     app_list_t *app = malloc(sizeof(app_list_t));
     if (app == NULL)
-        return app_none;
+        return app_handle_none;
 
     app->func.app_load = cfg->app_load;
     app->func.app_close = cfg->app_close;
@@ -87,16 +87,16 @@ app_handle_t app_install(app_config_t *cfg)
     app_list_add(app);
 
     if (cfg->app_init != NULL)
-        cfg->app_init();
+        cfg->app_init(arg);
 
     return (app_cnt - 1);
 }
 
-uint8_t app_load(const char *name, app_handle_t handle)
+uint8_t app_load(const char *name, app_handle_t handle, void *arg)
 {
 
     app_list_t *tmp;
-    if (name == NULL && handle == app_none)
+    if (name == NULL && handle == app_handle_none)
         return 0;
     if (name == NULL)
     {
@@ -114,23 +114,23 @@ uint8_t app_load(const char *name, app_handle_t handle)
     if (app_loaded != NULL)
     {
 
-        app_close(app_loaded->name, app_none);
+        app_close(app_loaded->name, app_handle_none, NULL);
     }
 
     app_loaded = &tmp->obj;
 
     if (tmp->func.app_load != NULL)
     {
-        tmp->func.app_load();
+        tmp->func.app_load(arg);
     }
 
     return 1;
 }
 
-uint8_t app_close(const char *name, app_handle_t handle)
+uint8_t app_close(const char *name, app_handle_t handle, void *arg)
 {
     app_list_t *tmp;
-    if (name == NULL && handle == app_none)
+    if (name == NULL && handle == app_handle_none)
         return 0;
     if (name == NULL)
         tmp = app_list_find_id(handle);
@@ -139,15 +139,15 @@ uint8_t app_close(const char *name, app_handle_t handle)
     if (tmp == NULL)
         return 0;
     if (tmp->func.app_close != NULL)
-        tmp->func.app_close();
+        tmp->func.app_close(arg);
     app_loaded = NULL;
     return 1;
 }
 
-uint8_t app_kill(const char *name, app_handle_t handle)
+uint8_t app_kill(const char *name, app_handle_t handle, void *arg)
 {
     app_list_t *tmp;
-    if (name == NULL && handle == app_none)
+    if (name == NULL && handle == app_handle_none)
         return 0;
     if (name == NULL)
         tmp = app_list_find_id(handle);
@@ -156,7 +156,7 @@ uint8_t app_kill(const char *name, app_handle_t handle)
     if (tmp == NULL)
         return 0;
     if (tmp->func.app_kill != NULL)
-        tmp->func.app_kill();
+        tmp->func.app_kill(arg);
     return 1;
 }
 
@@ -166,7 +166,7 @@ void app_kill_all()
     for (size_t i = 0; i < app_cnt; i++)
     {
         if (tmp->func.app_kill != NULL)
-            tmp->func.app_kill();
+            tmp->func.app_kill(NULL);
         tmp = tmp->next;
     }
 }
@@ -186,7 +186,7 @@ app_handle_t app_get_handle(const char *name)
 {
     app_list_t *tmp = app_list_find(name);
     if (tmp == NULL)
-        return (app_none);
+        return (app_handle_none);
     else
         return (tmp->handle);
 }

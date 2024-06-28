@@ -4,10 +4,22 @@ static uint8_t lcd_blk = 0;
 static lv_disp_drv_t disp_drv; // contains callback functions
 static esp_lcd_panel_handle_t panel_handle;
 
+#if LCD_SUPPORT_TE
+static uint8_t flush_busy = 0;
+static void IRAM_ATTR te_intrHandler(void *arg)
+{
+    if (flush_busy == 0)
+        lv_disp_flush_ready(&disp_drv);
+}
+#endif
+
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
-    lv_disp_drv_t *disp_driver = (lv_disp_drv_t *)user_ctx;
-    lv_disp_flush_ready(disp_driver);
+#if LCD_SUPPORT_TE
+    flush_busy = 0;
+#else
+    lv_disp_flush_ready(&disp_drv);
+#endif
     return false;
 }
 
@@ -15,6 +27,9 @@ void lcd_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *co
 {
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)drv->user_data;
     esp_lcd_panel_draw_bitmap(panel_handle, area->x1, area->y1, area->x2 + 1, area->y2 + 1, color_map); // (uint16_t *)&color_map->full
+#if LCD_SUPPORT_TE
+    flush_busy = 1;
+#endif
 }
 
 void lcd_driver_init()
@@ -104,6 +119,12 @@ void lcd_driver_init()
                                           .duty = 0, // Set duty to 0%
                                           .hpoint = 0};
     ledc_channel_config(&ledc_channel); // 启用背光LEDC
+
+#if LCD_SUPPORT_TE
+    gpio_set_intr_type(LCD_PIN_NUM_TE, GPIO_INTR_POSEDGE);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(LCD_PIN_NUM_TE, te_intrHandler, (void *)LCD_PIN_NUM_TE);
+#endif
 }
 
 void lcd_set_blk(uint8_t var)

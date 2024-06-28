@@ -95,7 +95,7 @@ void device_interface_init()
     lv_input_tp_init();                           // 初始化触摸
     senser_iic_init();                            // 初始化传感器IIC
     per_init();                                   // 初始化无源外围
-    esp_sleep_enable_ext0_wakeup(rxd_hc32_io, 0); // 使能休眠由协处理器唤醒
+    esp_sleep_enable_ext0_wakeup(rxd_hc32_io, 0); // 使能休眠唤醒
 
     const esp_timer_create_args_t ms_tick_timer_args = {// 心跳定时器
                                                         .callback = &timer_1ms_tic,
