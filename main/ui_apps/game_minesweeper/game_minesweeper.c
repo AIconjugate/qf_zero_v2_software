@@ -64,7 +64,6 @@ static uint8_t time_cnt_en = 0; // 游戏时长计时
 static key_value_handle_t btn_click_handle = NULL;
 static key_value_handle_t btn_double_handle = NULL;
 static lv_obj_t **pix_obj = NULL;
-static lv_obj_t *point_cuser_obj = NULL;
 static lv_obj_t *scr = NULL;
 static lv_obj_t *game_box = NULL;
 static uint8_t click_cnt = 0;
@@ -762,19 +761,6 @@ static void app_load_cb(void *arg)
     lv_obj_set_style_clip_corner(scr, true, 0);
 #endif
 
-    lv_indev_t *indev = NULL; // 触屏输入对象
-    key_value_msg("sys_get_tp_indev", &indev, sizeof(lv_indev_t *));
-
-    if (indev != NULL)
-    {
-        lv_obj_t *img = lv_img_create(lv_scr_act());        // 无鼠标指针对象
-        lv_img_set_src(img, &game_minesweeper_img_pointer); // 设置指针图标
-        lv_indev_set_cursor(indev, img);                    // 注册指针
-        if (point_cuser_obj != NULL)
-            lv_obj_del(point_cuser_obj);
-        point_cuser_obj = img;
-    }
-
     if (game_sta != game_sta_start) // 恢复
     {
         memcpy(pix_array_boom_sta, pix_array_boom_sta_save, sizeof(pix_array_boom_sta_save));
@@ -820,17 +806,6 @@ static void app_close_cb(void *arg)
     // 切换回触摸输入
 
     key_value_msg("tp_touch", NULL, 0);
-
-    // 隐藏鼠标指针图标
-    lv_indev_t *indev = NULL;
-    key_value_msg("sys_get_tp_indev", &indev, sizeof(lv_indev_t *));
-    if (indev != NULL)
-    {
-        lv_obj_t *img = lv_img_create(lv_scr_act());
-        lv_indev_set_cursor(indev, img);
-        lv_obj_del(point_cuser_obj);
-        point_cuser_obj = img;
-    }
 
     lv_timer_del(game_time_timer); // 删除游戏时长计时
 

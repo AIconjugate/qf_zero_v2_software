@@ -1,12 +1,12 @@
 #include "lv_input_interface.h"
 #include "lcd_driver_interface.h"
 #include "system_app.h"
+#include "app_mouse.h"
 
 static lv_indev_t *indev_tp_handle = NULL;
 static ring_buffer_handle_t ring_handle_x = NULL;
 static ring_buffer_handle_t ring_handle_y = NULL;
 static uint8_t tp_touch_sta = 0;
-static uint8_t tp_mode = 0; // 0:触摸，1：触摸板
 
 static void get_tp_indev_cb(void *value, size_t lenth)
 {
@@ -18,25 +18,11 @@ static void get_tp_touch_sta_cb(void *value, size_t lenth)
     *(uint8_t *)value = tp_touch_sta;
 }
 
-static void tp_touch_cb(void *value, size_t lenth)
-{
-    tp_mode = 0;
-}
-
-static void tp_mouse_cb(void *value, size_t lenth)
-{
-    tp_mode = 1;
-}
-
 static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
 {
     static cst816_info_t info;
     static uint8_t clr_flg = 0;
-
     static int16_t last_x = 0, last_y = 0;
-    static int16_t point_x = LCD_H_RES / 2, point_y = LCD_V_RES / 2;
-
-    // static uint32_t start_t = 0;
 
     cst816_read_info(&info);
 
@@ -62,18 +48,28 @@ static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
         ring_buffer_get_moveing_flitering(ring_handle_x, &nx);
         ring_buffer_get_moveing_flitering(ring_handle_y, &ny);
 
-        if (tp_mode == 0)
+        if (app_mouse_get_act() == 0)
         {
             data->point.x = nx;
             data->point.y = ny;
         }
         else
         {
-            static uint16_t x_add = 0, y_add = 0;
-            x_add = (nx - last_x) % 2;
-            y_add = (ny - last_y) % 2;
-            point_x += (nx - last_x) / 2 + x_add;
-            point_y += (ny - last_y) / 2 + y_add;
+            static int16_t point_x = LCD_H_RES / 2, point_y = LCD_V_RES / 2;
+            static float sx = 0, sy = 0;
+
+            sx += (float)(nx - last_x) * app_mouse_get_sensity();
+            sy += (float)(ny - last_y) * app_mouse_get_sensity();
+
+            int16_t x_int = sx;
+            int16_t y_int = sy;
+
+            sx -= x_int;
+            sy -= y_int;
+
+            point_x += x_int;
+            point_y += y_int;
+
             if (point_x < 0)
                 point_x = 0;
             else if (point_x >= LCD_H_RES)
@@ -102,7 +98,7 @@ static void tp_lvgl_read_cb(lv_indev_drv_t *indev, lv_indev_data_t *data)
             tp_touch_sta = 0;
             clr_flg = 0;
             system_screen_keep_on(0);
-            if (tp_mode == 0)
+            if (app_mouse_get_act() == 0)
             {
                 data->point.x = info.point.end_x;
                 data->point.y = info.point.end_y;
@@ -181,8 +177,6 @@ void lv_input_tp_init()
 
     key_value_register(NULL, "tp_sta", get_tp_touch_sta_cb);
     key_value_register(NULL, "sys_get_tp_indev", get_tp_indev_cb);
-    key_value_register(NULL, "tp_mouse", tp_mouse_cb);
-    key_value_register(NULL, "tp_touch", tp_touch_cb);
 }
 
 lv_indev_t *lv_input_get_handle()

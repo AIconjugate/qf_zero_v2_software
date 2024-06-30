@@ -41,8 +41,9 @@ typedef struct
 } system_paras_t;
 
 static system_paras_t sys_paras;
-static RTC_FAST_ATTR uint8_t last_blk = 50;
+static RTC_FAST_ATTR uint8_t blk_save = 50;
 static RTC_FAST_ATTR uint8_t wake_mode = power_on;
+static RTC_FAST_ATTR uint32_t rest_secont_save = system_rest_sec_default;
 static uint8_t low_blk_en = 0;
 
 extern void app_startup_list();
@@ -81,16 +82,17 @@ void system_init()
 static void system_data_init()
 {
     memset(&sys_paras, 0, sizeof(system_paras_t));
-    sys_paras.data.lcd_blk = last_blk;
-    sys_paras.eeprom.screen_rest_sec = system_rest_sec_default;
+    sys_paras.data.lcd_blk = blk_save;
+    sys_paras.eeprom.screen_rest_sec = rest_secont_save;
     const uint8_t version_tmp[3] = {software_version};
     memcpy(sys_paras.data.soft_version, version_tmp, sizeof(version_tmp));
 }
 
 static void system_data_save()
 {
-    if (low_blk_en == 0)
-        last_blk = sys_paras.data.lcd_blk;
+    // printf("here\n");
+    // if (low_blk_en == 0)
+    //    blk_save = sys_paras.data.lcd_blk;
 }
 
 static void clock_run_tsak(void *arg) // 时间运行任务
@@ -123,34 +125,24 @@ static void clock_run_tsak(void *arg) // 时间运行任务
 
     sys_paras.data.screen_rest_count++;
     static uint8_t low_blk_cnt = 0;
-    static uint8_t _last_blk = 0;
 
     if (sys_paras.data.screen_rest_count >= sys_paras.eeprom.screen_rest_sec)
     {
         if (low_blk_cnt == 0)
         {
-            low_blk_en = 1;
-            _last_blk = sys_paras.data.lcd_blk;
-            if (_last_blk < 5)
-                system_set_blk(1);
+            if (blk_save < 5)
+                sys_paras.data.lcd_blk = 1;
             else
-                system_set_blk(5);
+                sys_paras.data.lcd_blk = 5;
         }
-
         low_blk_cnt++;
         if (low_blk_cnt == 5)
-        {
-            // system_set_blk(_last_blk);
-
             system_deep_sleep_start();
-        }
     }
     else
     {
         if (low_blk_cnt)
-        {
-            system_set_blk(_last_blk);
-        }
+            sys_paras.data.lcd_blk = blk_save;
         low_blk_cnt = 0;
         low_blk_en = 0;
     }
@@ -233,6 +225,8 @@ void system_set_screen_rest(uint32_t rest_sec)
         return;
     sys_paras.eeprom.screen_rest_sec = rest_sec;
     sys_paras.data.screen_rest_count = 0;
+    if (rest_sec != screen_always_on)
+        rest_secont_save = rest_sec;
 }
 
 static void system_set_screen_rest_cb(void *value, size_t lenth)
@@ -247,7 +241,7 @@ uint32_t system_get_screen_rest()
 
 void system_screen_keep_on(uint8_t en)
 {
-    static uint32_t last_blk_rec = 0;
+    static uint32_t blk_save_rec = 0;
     static size_t _en = 0;
     static uint8_t _busy = 0;
 
@@ -281,13 +275,13 @@ void system_screen_keep_on(uint8_t en)
 
     if (en)
     {
-        last_blk_rec = system_get_screen_rest();
+        blk_save_rec = system_get_screen_rest();
         system_set_screen_rest(screen_always_on);
     }
     else
     {
         system_screen_rest_clr();
-        system_set_screen_rest(last_blk_rec);
+        system_set_screen_rest(blk_save_rec);
     }
     _busy = 0;
 }
@@ -307,6 +301,7 @@ void system_set_blk(uint8_t blk)
     if (blk < 1)
         blk = 1;
     sys_paras.data.lcd_blk = blk;
+    blk_save = blk;
 }
 
 static void system_set_blk_cb(void *value, size_t lenth)

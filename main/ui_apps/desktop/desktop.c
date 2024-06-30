@@ -202,7 +202,7 @@ static void menu_load(void)
         lv_obj_t *btn = public_create_col_img_label(memu_cont, app->icon, app->name, (const lv_font_t *)app->name_font);
 
         if (i < (app_get_cnt() - 2))
-            public_create_col_line(memu_cont, lv_color_hex(0x2D2D2D), 90);
+            public_create_col_line(memu_cont, lv_color_hex(0x3f3f3f), 90);
 
         lv_obj_add_event_cb(btn, app_click_cb, LV_EVENT_CLICKED, (void *)app->name);
     }
@@ -211,7 +211,7 @@ static void menu_load(void)
     {
         if (ui_app_cnt == 1)
         {
-            lv_obj_set_style_bg_opa(public_create_col_line(memu_cont, lv_color_hex(0x2D2D2D), 90), 0, 0);
+            lv_obj_set_style_bg_opa(public_create_col_line(memu_cont, lv_color_hex(0x3f3f3f), 90), 0, 0);
         }
         lv_event_send(memu_cont, LV_EVENT_SCROLL, NULL);
         lv_obj_scroll_to_view(lv_obj_get_child(memu_cont, 0), LV_ANIM_OFF);

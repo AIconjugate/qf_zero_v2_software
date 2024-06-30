@@ -22,6 +22,8 @@
 #include "game_2048.h"
 #include "game_minesweeper.h"
 
+#include "app_mouse.h"
+
 void app_startup_list() // APP初始化列表,按需裁剪，不需要的注释，可以大幅度减少烧录时间
 {
     /////////////// 无UI底层APP//////////////////
@@ -41,14 +43,15 @@ void app_startup_list() // APP初始化列表,按需裁剪，不需要的注释�
 #else
     // 会被隐藏不启用的APP
     // test_app_install();     // 测试APP
-    game_2048_install();      // 2048游戏
+    game_2048_install();        // 2048游戏
     game_minesweeper_install(); // 扫雷游戏
-    compass_app_install();  // 指南针APP
-    muyu_app_install();     // 电子木鱼APP
-    pop_cat_app_install();  // pop猫APP
-    clock_app_install();    // 时钟APP
-    yuanshen_app_install(); // 原神启动器
-    setting_app_install();  // 设置APP
+    yuanshen_app_install();     // 原神启动器
+    muyu_app_install();         // 电子木鱼APP
+    pop_cat_app_install();      // pop猫APP
+    compass_app_install();      // 指南针APP
+    clock_app_install();        // 时钟APP
+    app_mouse_install();        // 鼠标APP
+    setting_app_install();      // 设置APP
 #endif
 
     control_center_app_install(); // 控制中心APP

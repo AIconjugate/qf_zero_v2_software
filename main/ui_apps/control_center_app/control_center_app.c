@@ -284,6 +284,7 @@ static lv_obj_t *creat_page(uint8_t num)
 
     lv_obj_t *scr = lv_obj_create(NULL);
     lv_obj_set_size(scr, LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_style_bg_color(scr, lv_color_hex(0x0), 0);
 
     if (num == 0)
         create_page0(scr);

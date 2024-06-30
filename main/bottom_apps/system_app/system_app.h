@@ -14,7 +14,7 @@
 #define system_rest_sec_default 15
 #define nvs_storage_name "sys_app_datas"
 #define nvs_version 1, 0, 0      // nvs版本号
-#define software_version 1, 0, 8 // 固件版本号
+#define software_version 1, 0, 9 // 固件版本号
 #define software_version_release 1
 
 typedef struct
