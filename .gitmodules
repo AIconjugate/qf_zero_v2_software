@@ -2,3 +2,7 @@
 	url  = https://gitee.com/deng-hongxiang/qf_-zero_-v2_-hc32_-sofoware
 	path = HC32_SOFTWARE
 
+[submodule "LVGL仿真工程"]
+	url  = https://gitee.com/deng-hongxiang/qf-zero-v2_lvgl_simulator_codeblocks
+	path = LVGL仿真工程
+
