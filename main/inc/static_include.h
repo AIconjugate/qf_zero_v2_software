@@ -50,6 +50,7 @@
 #include "app_manage.h"
 #include "fast_lib.h"
 #include "QMC5883L.h"
+#include "LSM6DSL.h"
 
 
 // 1:开发者模式，不安装成熟的APP，加快烧录速度,0：全部安装，具体白名单列表可在app_list.c内自行修改

@@ -83,7 +83,9 @@
         "qmc5883l_app.h": "c",
         "esp_pm.h": "c",
         "watch_03.h": "c",
-        "trans_packer.h": "c"
+        "trans_packer.h": "c",
+        "cstdint": "c",
+        "compare": "c"
     },
     "cmake.configureOnOpen": false,
     "idf.port": "/dev/ttyACM0"

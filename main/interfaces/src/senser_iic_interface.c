@@ -55,5 +55,10 @@ esp_err_t senser_iic_init()
         .write_byte = senser_iic_write_byte};
     qmc5883l_attach_trans_cb(&cfg);
 
+    lsm6dsl_trans_cb_t cfg_lsm = {
+        .read_bytes = senser_iic_read_bytes,
+        .write_byte = senser_iic_write_byte};
+    lsm6dsl_attach_trans_cb(&cfg_lsm);
+
     return ESP_OK;
 }

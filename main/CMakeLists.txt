@@ -1,10 +1,13 @@
 
+FILE(GLOB SRC_DIRS "*/src" "src" )
+FILE(GLOB INC_DIRS "*/inc" "inc" )
 
 
 idf_component_register( 
-    #底层路径添加
-    SRC_DIRS        "src"   "interfaces/src" "data/src" 
-    INCLUDE_DIRS    "inc"  "interfaces/inc" "data/inc" 
+
+    SRC_DIRS "${SRC_DIRS}"
+    INCLUDE_DIRS "${INC_DIRS}"
+    
 
     #APP路径添加
     SRC_DIRS        "bottom_apps/btn_event_app" "bottom_apps/hc32_trans_app" 
