@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SystemConfig>
+  <EnglishLanguage>false</EnglishLanguage>
+  <TargetMCU>
+    <Index>3</Index>
+  </TargetMCU>
+  <CrystalIndex>1</CrystalIndex>
+  <HexFile>E:\Program\Keil\小华\GPIO_DEMO\output\release\gpio_inout.hex</HexFile>
+  <Com>COM4</Com>
+  <AutoNumber>
+    <AutoNumberSelected>false</AutoNumberSelected>
+    <AotuNumberStartAddr></AotuNumberStartAddr>
+    <Length></Length>
+    <StartNum></StartNum>
+    <Interval></Interval>
+    <CurrentNum></CurrentNum>
+    <HistoryNum></HistoryNum>
+  </AutoNumber>
+  <ChipErase>true</ChipErase>
+  <FullDuplex>false</FullDuplex>
+  <Erase>true</Erase>
+  <BlankCheck>true</BlankCheck>
+  <Program>true</Program>
+  <Verify>true</Verify>
+  <Encrypt>false</Encrypt>
+  <Encrypt2>false</Encrypt2>
+  <Disorder>7776</Disorder>
+</SystemConfig>
